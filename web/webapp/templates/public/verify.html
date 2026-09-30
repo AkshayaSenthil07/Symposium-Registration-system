@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Certificate check{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="card auth-card wide">
+      <p class="eyebrow">Certificate verification</p>
+      {% if cert %}
+        <h1>Valid certificate</h1>
+        <div class="alert success">This certificate was issued by {{ site.symposium_name }}.</div>
+        <dl class="kv">
+          <dt>Certificate ID</dt><dd class="mono">{{ code|upper }}</dd>
+          <dt>Name</dt><dd>{{ cert.full_name }}</dd>
+          <dt>College</dt><dd>{{ cert.college_name or '—' }}</dd>
+          <dt>Event</dt><dd>{{ cert.event_name }}</dd>
+          <dt>Date</dt><dd>{{ cert.event_date|date }}</dd>
+          <dt>Type</dt><dd>{{ {1: 'Merit - First prize', 2: 'Merit - Second prize', 3: 'Merit - Third prize'}.get(cert.result_position, 'Participation') }}</dd>
+        </dl>
+      {% else %}
+        <h1>Not found</h1>
+        <div class="alert error mb-0">No valid certificate matches the ID <span class="mono">{{ code }}</span>. Check the ID printed on the certificate.</div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

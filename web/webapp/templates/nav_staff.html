@@ -1,0 +1,32 @@
+{% set role = current_user.role %}
+<div class="group">Event day</div>
+<a href="{{ url_for('staff.dashboard') }}" class="{{ 'active' if ep == 'staff.dashboard' }}">Dashboard</a>
+<a href="{{ url_for('staff.checkin') }}" class="{{ 'active' if ep == 'staff.checkin' }}">QR check-in</a>
+{% if role in ('ADMIN', 'CASHIER') %}
+<a href="{{ url_for('staff.desk') }}" class="{{ 'active' if ep.startswith('staff.desk') }}">Registration desk</a>
+<a href="{{ url_for('staff.payments') }}" class="{{ 'active' if ep in ('staff.payments', 'staff.reconcile') }}">Payments</a>
+<a href="{{ url_for('staff.cashier_report') }}" class="{{ 'active' if ep == 'staff.cashier_report' }}">Cash report</a>
+{% endif %}
+<a href="{{ url_for('staff.registrations') }}" class="{{ 'active' if ep in ('staff.registrations', 'staff.registration') }}">Registrations</a>
+{% if role in ('ADMIN', 'COORDINATOR') %}
+<a href="{{ url_for('staff.scoring_home') }}" class="{{ 'active' if ep.startswith('staff.scoring') }}">Scoring &amp; results</a>
+{% endif %}
+{% if role == 'ADMIN' %}
+<div class="group">Manage</div>
+<a href="{{ url_for('admin.events') }}" class="{{ 'active' if ep.startswith('admin.event') }}">Events</a>
+<a href="{{ url_for('admin.news') }}" class="{{ 'active' if ep.startswith('admin.news') }}">Flash news</a>
+<a href="{{ url_for('admin.participants') }}" class="{{ 'active' if ep.startswith('admin.participant') }}">Participants</a>
+<a href="{{ url_for('admin.staff_users') }}" class="{{ 'active' if ep.startswith('admin.staff') }}">Staff accounts</a>
+<a href="{{ url_for('admin.coupons') }}" class="{{ 'active' if ep.startswith('admin.coupon') }}">Coupons</a>
+<a href="{{ url_for('admin.masters') }}" class="{{ 'active' if ep.startswith('admin.master') }}">Venues &amp; lists</a>
+<a href="{{ url_for('admin.feedback') }}" class="{{ 'active' if ep == 'admin.feedback' }}">Feedback</a>
+<div class="group">Insights</div>
+<a href="{{ url_for('admin.reports') }}" class="{{ 'active' if ep == 'admin.reports' }}">Reports</a>
+<a href="{{ url_for('admin.sql_console') }}" class="{{ 'active' if ep == 'admin.sql_console' }}">SQL console</a>
+<a href="{{ url_for('admin.audit') }}" class="{{ 'active' if ep == 'admin.audit' }}">Audit log</a>
+<a href="{{ url_for('admin.outbox') }}" class="{{ 'active' if ep == 'admin.outbox' }}">E-mail outbox</a>
+<div class="group">System</div>
+<a href="{{ url_for('admin.settings_page') }}" class="{{ 'active' if ep == 'admin.settings_page' }}">Settings</a>
+<a href="{{ url_for('admin.backups') }}" class="{{ 'active' if ep == 'admin.backups' }}">Backups</a>
+<a href="{{ url_for('admin.data_mode') }}" class="{{ 'active' if ep == 'admin.data_mode' }}">Demo / go live</a>
+{% endif %}

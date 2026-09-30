@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "macros.html" import price, seat_bar %}
+{% block title %}{{ e.event_name }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <p class="small"><a href="{{ url_for('public.event_list') }}">&larr; All events</a></p>
+    <div class="grid grid-2">
+      <div class="stack">
+        <div class="row"><span class="badge">{{ e.category_name }}</span>
+          {% if e.status != 'OPEN' %}<span class="badge {{ e.status }}">{{ e.status.title() }}</span>{% endif %}
+          {% if e.is_team %}<span class="badge info">Team of {{ e.team_min }}{% if e.team_max > e.team_min %}–{{ e.team_max }}{% endif %}</span>{% endif %}</div>
+        <h1>{{ e.event_name }}</h1>
+        {% if e.recently_changed %}<div class="alert warn"><b>Updated:</b> {{ e.change_note }}</div>{% endif %}
+        {% if e.description %}<p>{{ e.description }}</p>{% endif %}
+        {% if e.rules %}<h3>Rules</h3><p class="prewrap">{{ e.rules }}</p>{% endif %}
+        {% if e.prizes %}<h3>Prizes</h3><p>{{ e.prizes }}</p>{% endif %}
+      </div>
+      <aside class="card stack">
+        <dl class="kv">
+          <dt>Date</dt><dd>{{ e.event_date|date }}</dd>
+          <dt>Time</dt><dd>{{ e.start_time|time }} – {{ e.end_time|time }}</dd>
+          <dt>Venue</dt><dd>{{ e.venue_name or 'Online' }}</dd>
+          <dt>Fee</dt><dd>{{ price(e) }}{% if e.is_team and e.current_price %} <span class="hint">per team</span>{% endif %}</dd>
+          {% if e.early_bird_active %}<dt>Early bird</dt><dd>until {{ e.early_bird_until|date }}</dd>{% endif %}
+          {% if e.registration_deadline %}<dt>Register by</dt><dd>{{ e.registration_deadline|date }}</dd>{% endif %}
+          {% if e.coordinator_name %}<dt>Coordinator</dt><dd>{{ e.coordinator_name }}{% if e.coordinator_phone %} · <a href="tel:{{ e.coordinator_phone }}">{{ e.coordinator_phone }}</a>{% endif %}</dd>{% endif %}
+        </dl>
+        <div>{{ seat_bar(e) }}</div>
+        {% if e.can_register and site.registrations_open == '1' %}
+          <a class="btn gold block" href="{{ url_for('participant.register', event_id=e.event_id) }}">{{ 'Join waitlist' if e.seats_left <= 0 else 'Register now' }}</a>
+          {% if e.seats_left <= 0 %}<p class="small muted mb-0">This event is full. Join the waitlist and we will e-mail you if a seat opens up.</p>{% endif %}
+        {% elif e.is_past or e.status == 'COMPLETED' %}
+          <p class="muted mb-0">This event has finished.{% if e.results_published %} <a href="{{ url_for('public.results_page') }}">See the results</a>.{% endif %}</p>
+        {% elif e.deadline_passed %}<p class="muted mb-0">Registration deadline has passed.</p>
+        {% else %}<p class="muted mb-0">Registrations are not open right now.</p>{% endif %}
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}

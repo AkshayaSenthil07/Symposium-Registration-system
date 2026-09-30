@@ -1,0 +1,9 @@
+Hi {{ name }},
+
+Thanks for creating your {{ site.symposium_name }} account. Please confirm your e-mail address:
+
+{{ link }}
+
+This link is valid for 48 hours. If you did not sign up, ignore this e-mail.
+
+{{ site.host_institution }}, {{ site.college_name }}
