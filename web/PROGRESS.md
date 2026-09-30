@@ -29,3 +29,4 @@ Database: `symposium_live` (separate from the desktop version's `symposium_db`).
 ## Log
 - 2026-09-30: Stage A done - schema (symposium_live + limited MySQL users), config, DB pool with reconnect, security (CSRF, headers/CSP, rate limits, PBKDF2, tokens), public pages + flash-news ticker, auth (signup/verify/login lockout/forgot/reset/change password). Smoke-tested.
 - 2026-09-30: Stage B done - registration transaction (row lock, team size, coupons, early bird, clash, limits, waitlist), UPI QR + UTR submission, mock/Razorpay gateway with signature + amount verification + webhook, cash hold, QR ticket, PDF receipt/certificate, notifications, participant pages. Tested (ticket QR needs staff.checkin from stage C).
+- 2026-09-30: WIP - staff + admin blueprints, reports, cashdesk (UTR verify, bank CSV reconcile), backups, demo/go-live services written. NEXT: staff/admin templates, then test stages C-E.
