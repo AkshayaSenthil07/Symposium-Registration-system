@@ -98,7 +98,7 @@ def callback():
 @bp.route("/mock/<order_id>", methods=["GET", "POST"])
 @roles_required("PARTICIPANT")
 def mock_checkout(order_id):
-    if gateway.mode() != "mock":
+    if not gateway.mock_allowed():
         abort(404)
     from webapp import db
     row = db.get().one("SELECT p.*, r.user_id FROM payment p JOIN registration r ON r.reg_id = p.reg_id "

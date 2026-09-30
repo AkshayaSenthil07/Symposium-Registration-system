@@ -39,6 +39,7 @@
     {{ csrf() }}<input type="hidden" name="section" value="gateway">
     <h3 class="mb-0">Online payment gateway (Razorpay)</h3>
     <p class="small muted mb-0">Keys are saved in the server's private config file, never in the database. Leave a secret blank to keep the current one.</p>
+    {% if s.data_mode == 'live' and cfg.payment.gateway_mode == 'mock' %}<div class="alert warn mb-0">The demo gateway never works on a live site, so "Pay online" is hidden from participants until you enter Razorpay keys. UPI QR and desk payments keep working.</div>{% endif %}
     <div class="field"><label for="gateway_mode">Mode</label><select id="gateway_mode" name="gateway_mode">
       {% for m, label in (('mock', 'Demo (built-in mock, no real money)'), ('test', 'Razorpay TEST keys'), ('live', 'Razorpay LIVE keys - real money')) %}<option value="{{ m }}" {{ 'selected' if cfg.payment.gateway_mode == m }}>{{ label }}</option>{% endfor %}</select></div>
     <div class="field"><label for="razorpay_key_id">Key ID</label><input type="text" id="razorpay_key_id" name="razorpay_key_id" value="{{ cfg.payment.razorpay_key_id }}" placeholder="rzp_test_... or rzp_live_..."></div>

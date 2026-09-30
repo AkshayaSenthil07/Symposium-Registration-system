@@ -109,3 +109,17 @@ def test_statement_parser_handles_bank_layouts():
         b"Bank of X\nTran Date,Particulars,Chq/Ref Number,Withdrawal Amt,Deposit Amt\n"
         b"01-10-2026,UPI-ASHA-412345678901-fee,,,\"1,200.00\"\n")
     assert rows and rows[0]["utr"] == "412345678901" and rows[0]["amount"] == 1200
+
+
+def test_mock_gateway_disabled_on_live_site(app, ctx, make_user, make_event):
+    from webapp.services import settings
+    settings.save({"data_mode": "live"})
+    try:
+        assert not gateway.is_ready()
+        assert "GATEWAY" not in R.enabled_methods()
+        with pytest.raises(R.RegistrationError):
+            R.register(make_user()["user_id"], make_event(), method="GATEWAY")
+        with pytest.raises(gateway.GatewayError):
+            gateway.verify_and_capture("order_MOCKX", "pay_MOCKX", gateway.mock_signature("order_MOCKX", "pay_MOCKX"))
+    finally:
+        settings.save({"data_mode": "demo"})

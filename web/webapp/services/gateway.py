@@ -33,9 +33,14 @@ def _keys():
     return p["razorpay_key_id"], p["razorpay_key_secret"], p["razorpay_webhook_secret"]
 
 
+def mock_allowed() -> bool:
+    """The simulated gateway must NEVER work on a live site (it would give free seats)."""
+    return mode() == "mock" and settings.get("data_mode") == "demo"
+
+
 def is_ready() -> bool:
     if mode() == "mock":
-        return True
+        return mock_allowed()
     key_id, secret, _ = _keys()
     return bool(key_id and secret)
 
@@ -53,6 +58,8 @@ def start(payment: dict, reg: dict) -> dict:
     if not order_id:
         receipt = f"REG{reg['reg_id']:06d}"
         if mode() == "mock":
+            if not mock_allowed():
+                raise GatewayError("Online payment is not configured yet. Please use UPI QR or pay at the desk.")
             order_id = "order_MOCK" + secrets.token_hex(7).upper()
         else:
             key_id, secret, _ = _keys()
@@ -85,6 +92,8 @@ def verify_and_capture(order_id: str, payment_id: str, signature: str) -> dict:
         return row                                           # already confirmed (e.g. by the webhook)
     expected = int((row["amount"] + convenience_fee()) * 100)
     if mode() == "mock":
+        if not mock_allowed():
+            raise GatewayError("Online payment is not configured.")
         if not payment_id.startswith("pay_MOCK") or not signature_ok(f"{order_id}|{payment_id}", signature,
                                                                       current_app.config["CFG"]["payment"]["mock_secret"]):
             raise GatewayError("Payment verification failed.")

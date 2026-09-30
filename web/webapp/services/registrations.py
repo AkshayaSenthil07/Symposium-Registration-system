@@ -134,7 +134,7 @@ def register(user_id: int, event_id: int, team_name: str = "", members: list[dic
                 status = "WAITLISTED" if waitlisted else "PENDING"
             else:
                 status = "WAITLISTED" if waitlisted else "PENDING"
-            if method not in ONLINE_METHODS or not _method_enabled(method, source):
+            if method not in ONLINE_METHODS or not _method_enabled(method, source) or                     (source == "ONLINE" and method not in enabled_methods()):
                 raise RegistrationError("Please choose an available payment method.")
             hold_minutes = settings.number("desk_hold_minutes" if method == "CASH" else "online_hold_minutes", 60)
             hold = None if (waitlisted or total == 0 or cash_collected_by) else t + dt.timedelta(minutes=hold_minutes)
@@ -179,7 +179,8 @@ def _method_enabled(method: str, source: str) -> bool:
 
 
 def enabled_methods() -> list[str]:
-    return [m for m in ONLINE_METHODS if _method_enabled(m, "ONLINE")]
+    from webapp.services import gateway
+    return [m for m in ONLINE_METHODS if _method_enabled(m, "ONLINE") and (m != "GATEWAY" or gateway.is_ready())]
 
 
 def _create_payment(cur, reg_id, total, method, cash_collected_by=None):

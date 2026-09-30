@@ -67,3 +67,7 @@ def test_go_live_needs_real_admin_and_keeps_setup(app, db, make_user):
     assert db.value("SELECT COUNT(*) FROM app_user WHERE role = 'PARTICIPANT'") == 0
     assert db.value("SELECT COUNT(*) FROM registration") == 0
     assert db.value("SELECT COUNT(*) FROM venue") == venues
+    with app.app_context():
+        from webapp.services import settings
+        assert settings.get("data_mode") == "live"
+        settings.save({"data_mode": "demo"})             # leave the test database as we found it

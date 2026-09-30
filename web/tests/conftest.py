@@ -43,6 +43,7 @@ def app():
     cur.execute("INSERT INTO department (dept_name) VALUES ('CSE'), ('IT')")
     cur.execute("INSERT INTO event_category (category_name) VALUES ('Technical')")
     cur.execute("INSERT INTO venue (venue_name, capacity) VALUES ('Hall A', 200), ('Hall B', 200)")
+    cur.execute("INSERT INTO app_setting VALUES ('data_mode', 'demo')")      # mock gateway allowed in tests
     conn.close()
     from webapp import create_app
     cfg = config.load()["mysql"]
