@@ -1,0 +1,7 @@
+{{ heading }}
+
+{% for line in lines %}{{ line }}
+
+{% endfor %}{% if button and url %}{{ button }}: {{ url }}
+
+{% endif %}{{ site.host_institution }}, {{ site.college_name }}

@@ -19,7 +19,7 @@ Database: `symposium_live` (separate from the desktop version's `symposium_db`).
 
 ## Stages
 - [x] A. Skeleton: config, DB layer, schema, security basics, layout, public pages, news ticker, auth
-- [ ] B. Participant: event registration (team, coupon, early bird, waitlist), payments, QR ticket, receipt
+- [x] B. Participant: event registration (team, coupon, early bird, waitlist), payments, QR ticket, receipt
 - [ ] C. Staff/admin core: dashboard, events (venue clash, change notices), registrations, desk walk-in,
         payment verification + bank CSV reconciliation, QR check-in, staff roles
 - [ ] D. Results & scoring, certificates + verify page, feedback, news admin, coupons admin, e-mail
@@ -28,3 +28,4 @@ Database: `symposium_live` (separate from the desktop version's `symposium_db`).
 
 ## Log
 - 2026-09-30: Stage A done - schema (symposium_live + limited MySQL users), config, DB pool with reconnect, security (CSRF, headers/CSP, rate limits, PBKDF2, tokens), public pages + flash-news ticker, auth (signup/verify/login lockout/forgot/reset/change password). Smoke-tested.
+- 2026-09-30: Stage B done - registration transaction (row lock, team size, coupons, early bird, clash, limits, waitlist), UPI QR + UTR submission, mock/Razorpay gateway with signature + amount verification + webhook, cash hold, QR ticket, PDF receipt/certificate, notifications, participant pages. Tested (ticket QR needs staff.checkin from stage C).

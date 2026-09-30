@@ -1,0 +1,25 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Secure payment{% endblock %}
+{% block sidenav %}{% include "nav_participant.html" %}{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <h1>Secure payment</h1>
+  <p>{{ r.event_name }} · <b>{{ (order.amount_paise / 100)|money }}</b></p>
+  <p class="small muted">The payment window opens automatically. If it does not, press the button.</p>
+  <button class="btn gold block" type="button" id="rzp-pay"
+          data-key="{{ order.key_id }}" data-order="{{ order.order_id }}" data-amount="{{ order.amount_paise }}"
+          data-name="{{ site.symposium_name }}" data-desc="{{ r.event_name[:80] }}"
+          data-prefill-name="{{ r.full_name }}" data-prefill-email="{{ r.email }}" data-prefill-contact="{{ r.phone or '' }}"
+          data-cancel="{{ url_for('participant.registration', reg_id=r.reg_id) }}">Pay now</button>
+  <form id="rzp-done" method="post" action="{{ url_for('payments.callback') }}">
+    {{ csrf() }}
+    <input type="hidden" name="razorpay_order_id"><input type="hidden" name="razorpay_payment_id"><input type="hidden" name="razorpay_signature">
+  </form>
+  <p class="small mt-2 mb-0"><a href="{{ url_for('participant.registration', reg_id=r.reg_id) }}">&larr; Back</a></p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+{% endblock %}

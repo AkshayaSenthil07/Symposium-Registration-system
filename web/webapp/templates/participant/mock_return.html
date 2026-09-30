@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Returning to the site{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="card auth-card center">
+    <h1>Payment done</h1>
+    <p class="muted">Verifying your payment with the server&hellip;</p>
+    <form method="post" action="{{ url_for('payments.callback') }}" data-autosubmit-form>
+      {{ csrf() }}
+      <input type="hidden" name="razorpay_order_id" value="{{ order_id }}">
+      <input type="hidden" name="razorpay_payment_id" value="{{ pay_id }}">
+      <input type="hidden" name="razorpay_signature" value="{{ sig }}">
+      <button class="btn" type="submit">Continue</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/autosubmit.js') }}"></script>{% endblock %}

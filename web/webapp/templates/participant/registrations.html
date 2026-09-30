@@ -1,0 +1,24 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import status_badge %}
+{% block title %}My registrations{% endblock %}
+{% block sidenav %}{% include "nav_participant.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My registrations &amp; tickets</h1><p>Open a registration to see its QR ticket, pay, or download the receipt.</p></div></div>
+{% if regs %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Event</th><th>When</th><th>Amount</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for r in regs %}
+  <tr>
+    <td><b>{{ r.event_name }}</b>{% if r.team_name %}<br><span class="small muted">Team {{ r.team_name }}</span>{% endif %}</td>
+    <td>{{ r.event_date|date }}<br><span class="small muted">{{ r.start_time|time }}</span></td>
+    <td>{{ r.fee_amount|money if r.fee_amount else 'Free' }}</td>
+    <td>{% if r.payment_status %}{{ status_badge(r.payment_status) }}{% else %}—{% endif %}</td>
+    <td>{{ status_badge(r.status) }}{% if r.result_position and r.results_published %} <span class="badge gold">Winner</span>{% endif %}</td>
+    <td><a class="btn sm" href="{{ url_for('participant.registration', reg_id=r.reg_id) }}">Open</a></td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}<div class="card empty">No registrations yet. <a href="{{ url_for('public.event_list') }}">Browse events</a></div>{% endif %}
+{% endblock %}

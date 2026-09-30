@@ -89,7 +89,8 @@ def _register_hooks(app, https):
 
     @app.after_request
     def security_headers(resp):
-        csp = ("default-src 'self'; img-src 'self' data: blob:; style-src 'self'; "
+        style = "'self' 'unsafe-inline'" if g.get("relaxed_csp") else "'self'"
+        csp = (f"default-src 'self'; img-src 'self' data: blob: https://*.razorpay.com; style-src {style}; "
                "script-src 'self' https://checkout.razorpay.com; "
                "frame-src https://api.razorpay.com https://checkout.razorpay.com; "
                "connect-src 'self' https://lumberjack.razorpay.com; "

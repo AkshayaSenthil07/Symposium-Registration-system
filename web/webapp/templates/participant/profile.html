@@ -1,0 +1,21 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}My profile{% endblock %}
+{% block sidenav %}{% include "nav_participant.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My profile</h1><p>These details are printed on your tickets and certificates.</p></div></div>
+<form method="post" class="card form">
+  {{ csrf() }}
+  <div class="form-grid">
+    <div class="field"><label for="full_name">Full name</label><input type="text" id="full_name" name="full_name" value="{{ p.full_name }}" required maxlength="100"></div>
+    <div class="field"><label for="email">E-mail (sign-in ID)</label><input type="email" id="email" value="{{ p.email }}" disabled></div>
+    <div class="field"><label for="phone">Mobile number</label><input type="tel" id="phone" name="phone" value="{{ p.phone or '' }}" required maxlength="10" pattern="[0-9]{10}"></div>
+    <div class="field"><label for="gender">Gender</label><select id="gender" name="gender"><option value="">Prefer not to say</option>{% for g in ('Male', 'Female', 'Other') %}<option {{ 'selected' if p.gender == g }}>{{ g }}</option>{% endfor %}</select></div>
+    <div class="field full"><label for="college">College</label><input type="text" id="college" name="college" value="{{ p.college_name or '' }}" list="colleges" required maxlength="150">
+      <datalist id="colleges">{% for c in colleges %}<option value="{{ c.college_name }}">{% endfor %}</datalist></div>
+    <div class="field"><label for="dept_id">Department</label><select id="dept_id" name="dept_id" required>{% for d in departments %}<option value="{{ d.dept_id }}" {{ 'selected' if p.dept_id == d.dept_id }}>{{ d.dept_name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="year">Year of study</label><select id="year" name="year" required>{% for y in range(1, 6) %}<option value="{{ y }}" {{ 'selected' if p.year_of_study == y }}>Year {{ y }}</option>{% endfor %}</select></div>
+  </div>
+  <div><button class="btn" type="submit">Save profile</button></div>
+</form>
+{% endblock %}
