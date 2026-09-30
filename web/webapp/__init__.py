@@ -44,7 +44,9 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     _setup_logging(app)
     csrf.init_app(app)
-    if not app.config.get("SKIP_DB"):
+    if app.config.get("DB_PARAMS"):                          # tests use their own database
+        db.init(app.config["DB_PARAMS"], app.config.get("DB_RO_PARAMS"))
+    elif not app.config.get("SKIP_DB"):
         db.init(config.mysql_params(cfg), config.mysql_params(cfg, readonly=True))
 
     _register_hooks(app, https)                  # must run before blueprint hooks (loads g.user)

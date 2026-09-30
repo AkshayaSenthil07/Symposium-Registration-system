@@ -309,3 +309,4 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .prewrap { white-space: pre-line; }
 .pb-0 { padding-bottom: 0; }
+.row > select, .row > input[type=text], .row > input[type=search] { width: auto; flex: 1 1 200px; }

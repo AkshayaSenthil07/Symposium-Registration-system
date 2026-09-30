@@ -25,7 +25,7 @@ def list_events(public_only=True, category_id=None, search="", status=None) -> l
     if search:
         sql += " AND (event_name LIKE %s OR description LIKE %s OR coordinator_name LIKE %s)"
         params += [f"%{search}%"] * 3
-    sql += " ORDER BY event_date, start_time, event_name"
+    sql += " ORDER BY event_date < CURDATE(), event_date, start_time, event_name"   # finished events last
     return [decorate(e) for e in db.get().all(sql, tuple(params))]
 
 

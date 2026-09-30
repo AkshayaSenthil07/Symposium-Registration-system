@@ -218,6 +218,9 @@ def load_demo(actor_id) -> str:
     db.get().run("UPDATE registration SET registered_at = NOW() - INTERVAL FLOOR(RAND(7) * 13) DAY "
                  "- INTERVAL FLOOR(RAND(3) * 600) MINUTE WHERE event_id IN (" + ",".join(["%s"] * len(event_ids)) + ")",
                  tuple(event_ids))
+    # keep unpaid demo seats on hold for a week so the demo does not "decay" after an hour
+    db.get().run("UPDATE registration SET hold_expires_at = NOW() + INTERVAL 7 DAY "
+                 "WHERE status = 'PENDING' AND hold_expires_at IS NOT NULL")
     _write_bank_statement(bank_lines, rng)
     audit.log(actor_id, "DEMO_LOADED", f"{len(people) + 1} participants, {len(event_ids) + 1} events")
     return f"Demo data loaded: {len(people) + 1} participants, {len(event_ids) + 1} events. Password for every demo account: {DEMO_PASSWORD}"

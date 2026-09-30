@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 import mysql.connector
 from mysql.connector import errorcode, pooling
+from mysql.connector.errors import PoolError
 
 log = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class Database:
     def _connection(self):
         """Get a live pooled connection, rebuilding the pool / reconnecting if MySQL restarted."""
         last = None
-        for attempt in range(3):
+        for attempt in range(8):
             try:
                 with self._lock:
                     if self._pool is None:
@@ -81,9 +82,9 @@ class Database:
                 if not conn.is_connected():
                     conn.reconnect(attempts=2, delay=1)
                 return conn
-            except pooling.errors.PoolError as err:          # pool exhausted - wait briefly
+            except PoolError as err:                        # pool exhausted - wait briefly
                 last = err
-                time.sleep(0.3 * (attempt + 1))
+                time.sleep(0.1 * (attempt + 1))
             except (mysql.connector.Error, DatabaseError) as err:
                 last = err
                 log.warning("DB connection attempt %s failed: %s", attempt + 1, err)

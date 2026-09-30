@@ -170,7 +170,7 @@ def news_page():
             return redirect(url_for("admin.news"))
         msg = clean(f.get("message"), 300)
         link = clean(f.get("link_url"), 255)
-        if link and not (link.startswith("/") or link.startswith("https://")):
+        if link and not ((link.startswith("/") and not link.startswith("//")) or link.startswith("https://")):
             flash("Link must start with / (a page on this site) or https://", "error")
         elif len(msg) < 5:
             flash("Write the news message (at least 5 characters).", "error")
