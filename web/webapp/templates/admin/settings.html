@@ -1,0 +1,66 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Settings{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Settings</h1><p>Everything organisers may need to change - no code changes required.</p></div></div>
+
+<form method="post" class="stack">
+  {{ csrf() }}<input type="hidden" name="section" value="site">
+  {% for group, fields in groups %}
+  <section class="card form">
+    <h3 class="mb-0">{{ group }}</h3>
+    <div class="form-grid">
+    {% for key, label, kind in fields %}
+      {% if kind == 'bool' %}
+        <label class="check field full"><input type="checkbox" name="{{ key }}" value="1" {{ 'checked' if s[key] == '1' }}> <span>{{ label }}</span></label>
+      {% elif kind == 'textarea' %}
+        <div class="field full"><label for="{{ key }}">{{ label }}</label><textarea id="{{ key }}" name="{{ key }}" maxlength="5000">{{ s[key] }}</textarea></div>
+      {% else %}
+        <div class="field"><label for="{{ key }}">{{ label }}</label><input type="{{ 'number' if kind == 'number' else ('email' if kind == 'email' else 'text') }}" id="{{ key }}" name="{{ key }}" value="{{ s[key] }}" {{ 'min=0' if kind == 'number' }}></div>
+      {% endif %}
+    {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+  <div><button class="btn gold" type="submit">Save settings</button></div>
+</form>
+
+<div class="grid grid-2 mt-3">
+  <form method="post" enctype="multipart/form-data" class="card form">
+    {{ csrf() }}<input type="hidden" name="section" value="logo">
+    <h3 class="mb-0">Logo</h3>
+    {% if s.logo_path %}<img src="{{ url_for('public.logo') }}" alt="Current logo" class="qr">{% endif %}
+    <input type="file" name="logo" accept="image/png,image/jpeg" aria-label="Logo image">
+    <div class="btn-row"><button class="btn" type="submit">Upload</button>{% if s.logo_path %}<button class="btn ghost" name="remove" value="1">Remove</button>{% endif %}</div>
+  </form>
+
+  <form method="post" class="card form">
+    {{ csrf() }}<input type="hidden" name="section" value="gateway">
+    <h3 class="mb-0">Online payment gateway (Razorpay)</h3>
+    <p class="small muted mb-0">Keys are saved in the server's private config file, never in the database. Leave a secret blank to keep the current one.</p>
+    <div class="field"><label for="gateway_mode">Mode</label><select id="gateway_mode" name="gateway_mode">
+      {% for m, label in (('mock', 'Demo (built-in mock, no real money)'), ('test', 'Razorpay TEST keys'), ('live', 'Razorpay LIVE keys - real money')) %}<option value="{{ m }}" {{ 'selected' if cfg.payment.gateway_mode == m }}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="razorpay_key_id">Key ID</label><input type="text" id="razorpay_key_id" name="razorpay_key_id" value="{{ cfg.payment.razorpay_key_id }}" placeholder="rzp_test_... or rzp_live_..."></div>
+    <div class="field"><label for="razorpay_key_secret">Key secret {% if cfg.payment.razorpay_key_secret %}<span class="hint">(saved)</span>{% endif %}</label><input type="password" id="razorpay_key_secret" name="razorpay_key_secret" autocomplete="off"></div>
+    <div class="field"><label for="razorpay_webhook_secret">Webhook secret {% if cfg.payment.razorpay_webhook_secret %}<span class="hint">(saved)</span>{% endif %}</label><input type="password" id="razorpay_webhook_secret" name="razorpay_webhook_secret" autocomplete="off"></div>
+    <p class="small mb-0">In the Razorpay dashboard add a webhook to <span class="mono">{{ webhook_url }}</span> for the <b>payment.captured</b> event, using the same webhook secret. Enable only UPI and Netbanking.</p>
+    <div><button class="btn" type="submit">Save gateway settings</button></div>
+  </form>
+
+  <form method="post" class="card form">
+    {{ csrf() }}<input type="hidden" name="section" value="mail">
+    <h3 class="mb-0">E-mail sending</h3>
+    <div class="field"><label for="mode">Mode</label><select id="mode" name="mode"><option value="demo" {{ 'selected' if cfg.mail.mode != 'smtp' }}>Demo - keep in outbox only</option><option value="smtp" {{ 'selected' if cfg.mail.mode == 'smtp' }}>SMTP - really send</option></select></div>
+    <div class="form-grid">
+      <div class="field"><label for="smtp_host">SMTP host</label><input type="text" id="smtp_host" name="smtp_host" value="{{ cfg.mail.smtp_host }}"></div>
+      <div class="field"><label for="smtp_port">Port</label><input type="text" id="smtp_port" name="smtp_port" value="{{ cfg.mail.smtp_port }}"></div>
+      <div class="field"><label for="smtp_user">Username</label><input type="text" id="smtp_user" name="smtp_user" value="{{ cfg.mail.smtp_user }}"></div>
+      <div class="field"><label for="smtp_password">Password / app password {% if cfg.mail.smtp_password %}<span class="hint">(saved)</span>{% endif %}</label><input type="password" id="smtp_password" name="smtp_password" autocomplete="off"></div>
+      <div class="field full"><label for="from_address">From address</label><input type="text" id="from_address" name="from_address" value="{{ cfg.mail.from_address }}" placeholder="TECHNOVA 2026 &lt;technova@college.edu&gt;"></div>
+    </div>
+    <p class="small muted mb-0">For Gmail: turn on 2-step verification and create an "App password"; use smtp.gmail.com, port 587.</p>
+    <div class="btn-row"><button class="btn" type="submit">Save</button><button class="btn ghost" name="test" value="1">Save &amp; test connection</button></div>
+  </form>
+</div>
+{% endblock %}

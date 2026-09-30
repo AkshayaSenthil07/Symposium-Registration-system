@@ -1,0 +1,9 @@
+{% extends "app_base.html" %}
+{% block title %}Feedback{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Feedback</h1><p>Ratings from participants who attended.</p></div></div>
+<div class="grid grid-4 mb-2">{% for s in summary %}<div class="card stat-card gold"><div class="label">{{ s.event_name }}</div><div class="value">{{ s.avg }} / 5</div><div class="small muted">{{ s.n }} response(s)</div></div>{% else %}<div class="card empty">No feedback yet.</div>{% endfor %}</div>
+<div class="table-wrap"><table><thead><tr><th>When</th><th>Event</th><th>Participant</th><th class="num">Rating</th><th>Comments</th></tr></thead>
+<tbody>{% for f in rows %}<tr><td class="small">{{ f.created_at|date }}</td><td>{{ f.event_name }}</td><td>{{ f.full_name }}</td><td class="num">{{ f.rating }}</td><td>{{ f.comments or '' }}</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

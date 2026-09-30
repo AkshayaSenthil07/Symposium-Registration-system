@@ -1,0 +1,17 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}SQL console{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>SQL console</h1><p>Read-only queries run as a separate MySQL user that cannot see password hashes or write anything.</p></div></div>
+<nav class="tabs">{% for name in samples %}<a href="{{ url_for('admin.sql_console', sample=name) }}">{{ name }}</a>{% endfor %}</nav>
+<form method="post" class="form mb-2">{{ csrf() }}
+  <textarea name="sql" class="mono" rows="5" aria-label="SQL query">{{ sql }}</textarea>
+  <div><button class="btn" type="submit">Run query</button></div></form>
+{% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+{% if cols %}
+<p class="small muted">{{ rows|length }} row(s){% if rows|length >= 500 %} - first 500 shown{% endif %}</p>
+<div class="table-wrap"><table><thead><tr>{% for c in cols %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+<tbody>{% for row in rows %}<tr>{% for v in row %}<td>{{ v if v is not none else 'NULL' }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+{% endif %}
+{% endblock %}

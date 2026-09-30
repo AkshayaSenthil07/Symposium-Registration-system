@@ -1,0 +1,60 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}{{ 'Edit event' if event_id else 'New event' }}{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+{% set e = e or {} %}
+<div class="page-head"><div><h1>{{ 'Edit: ' + e.event_name if event_id else 'New event' }}</h1>
+  {% if event_id %}<p>{{ e.registered }} registered · {{ e.waitlisted }} waitlisted</p>{% endif %}</div>
+  <a class="btn ghost" href="{{ url_for('admin.events') }}">&larr; Events</a></div>
+
+<form method="post" class="card form">
+  {{ csrf() }}
+  <div class="form-grid">
+    <div class="field full"><label for="event_name">Event name</label><input type="text" id="event_name" name="event_name" value="{{ e.event_name or '' }}" required maxlength="100"></div>
+    <div class="field"><label for="category_id">Category</label><select id="category_id" name="category_id" required><option value="">Select</option>
+      {% for c in categories %}<option value="{{ c.category_id }}" {{ 'selected' if e.category_id == c.category_id }}>{{ c.category_name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="venue_id">Venue</label><select id="venue_id" name="venue_id"><option value="">Online / no venue</option>
+      {% for v in venues %}<option value="{{ v.venue_id }}" {{ 'selected' if e.venue_id == v.venue_id }}>{{ v.venue_name }} (capacity {{ v.capacity }})</option>{% endfor %}</select></div>
+    <div class="field"><label for="event_date">Date</label><input type="date" id="event_date" name="event_date" value="{{ e.event_date or '' }}" required></div>
+    <div class="field"><label for="start_time">Start time</label><input type="time" id="start_time" name="start_time" value="{{ hhmm(e.start_time) if e.start_time else '09:30' }}" required></div>
+    <div class="field"><label for="end_time">End time</label><input type="time" id="end_time" name="end_time" value="{{ hhmm(e.end_time) if e.end_time else '12:30' }}" required></div>
+    <div class="field"><label for="max_participants">Maximum participants <span class="hint">(teams count as one)</span></label><input type="number" id="max_participants" name="max_participants" min="1" value="{{ e.max_participants or 50 }}" required></div>
+    <div class="field"><label for="registration_fee">Fee (Rs) <span class="hint">0 = free; per team for team events</span></label><input type="number" id="registration_fee" name="registration_fee" min="0" step="0.01" value="{{ e.registration_fee if e.registration_fee is not none else 0 }}" required></div>
+    <div class="field"><label for="early_bird_fee">Early-bird fee (Rs) <span class="hint">optional</span></label><input type="number" id="early_bird_fee" name="early_bird_fee" min="0" step="0.01" value="{{ e.early_bird_fee if e.early_bird_fee is not none else '' }}"></div>
+    <div class="field"><label for="early_bird_until">Early bird ends</label><input type="datetime-local" id="early_bird_until" name="early_bird_until" value="{{ e.early_bird_until|dtlocal if e.early_bird_until else '' }}"></div>
+    <div class="field"><label for="registration_deadline">Online registration deadline <span class="hint">optional</span></label><input type="datetime-local" id="registration_deadline" name="registration_deadline" value="{{ e.registration_deadline|dtlocal if e.registration_deadline else '' }}"></div>
+    <div class="field"><label for="team_min">Team size - minimum <span class="hint">1 = individual</span></label><input type="number" id="team_min" name="team_min" min="1" max="10" value="{{ e.team_min or 1 }}"></div>
+    <div class="field"><label for="team_max">Team size - maximum</label><input type="number" id="team_max" name="team_max" min="1" max="10" value="{{ e.team_max or 1 }}"></div>
+    <div class="field"><label for="coordinator_name">Coordinator (shown publicly)</label><input type="text" id="coordinator_name" name="coordinator_name" value="{{ e.coordinator_name or '' }}" maxlength="100"></div>
+    <div class="field"><label for="coordinator_phone">Coordinator phone</label><input type="tel" id="coordinator_phone" name="coordinator_phone" value="{{ e.coordinator_phone or '' }}" maxlength="10"></div>
+    <div class="field"><label for="status">Status</label><select id="status" name="status">{% for s in ('OPEN', 'CLOSED', 'COMPLETED', 'CANCELLED') %}<option {{ 'selected' if (e.status or 'OPEN') == s }}>{{ s }}</option>{% endfor %}</select></div>
+    <div class="field full"><label for="description">Description</label><textarea id="description" name="description" maxlength="3000">{{ e.description or '' }}</textarea></div>
+    <div class="field full"><label for="rules">Rules <span class="hint">one per line</span></label><textarea id="rules" name="rules" maxlength="3000">{{ e.rules or '' }}</textarea></div>
+    <div class="field full"><label for="prizes">Prizes</label><input type="text" id="prizes" name="prizes" value="{{ e.prizes or '' }}" maxlength="255"></div>
+  </div>
+  <label class="check"><input type="checkbox" name="is_published" value="1" {{ 'checked' if e.is_published is not defined or e.is_published }}> <span>Show this event on the public website</span></label>
+  <label class="check"><input type="checkbox" name="allow_clash" value="1"> <span>Allow venue sharing (only tick if two events really share the venue at the same time)</span></label>
+  {% if event_id %}<label class="check"><input type="checkbox" name="announce" value="1" checked> <span>If the date, time or venue changed: post it in the flash news and e-mail everyone registered</span></label>{% endif %}
+  <div class="btn-row"><button class="btn gold" type="submit">Save event</button></div>
+</form>
+
+{% if event_id %}
+<div class="grid grid-2 mt-2">
+  <form method="post" action="{{ url_for('admin.event_staff', event_id=event_id) }}" class="card form">
+    {{ csrf() }}
+    <h3 class="mb-0">Coordinators &amp; judges</h3>
+    <p class="small muted mb-0">They can check in participants, see registrations and enter scores for this event only.</p>
+    <div class="stack">{% for s in staff %}<label class="check"><input type="checkbox" name="staff" value="{{ s.user_id }}" {{ 'checked' if s.user_id in assigned }}> <span>{{ s.full_name }} <span class="badge">{{ s.role.title() }}</span></span></label>
+    {% else %}<p class="muted">Create coordinator accounts in Staff accounts first.</p>{% endfor %}</div>
+    <div><button class="btn" type="submit">Save assignment</button></div>
+  </form>
+  <form method="post" action="{{ url_for('admin.event_delete', event_id=event_id) }}" class="card form" data-confirm="Delete this event permanently? (Only possible if nobody has paid.)">
+    {{ csrf() }}
+    <h3 class="mb-0">Delete event</h3>
+    <p class="small muted mb-0">Only for events created by mistake. If people have paid, set the status to CANCELLED instead so refunds can be tracked.</p>
+    <div><button class="btn danger" type="submit">Delete event</button></div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

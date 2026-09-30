@@ -1,0 +1,44 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, medal %}
+{% block title %}Scoring · {{ e.event_name }}{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ e.event_name }}</h1><p>{{ e.event_date|date }} · {{ board|length }} attendee(s) · results {{ 'published' if e.results_published else 'not published' }}</p></div>
+  <a class="btn ghost" href="{{ url_for('staff.scoring_home') }}">&larr; All events</a></div>
+{% if not board %}<div class="card empty">Scores can be entered after participants are checked in.</div>{% else %}
+<form method="post" class="mb-2">
+  {{ csrf() }}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Reg</th><th>Participant / team</th><th>College</th><th class="num">Judges</th><th class="num">Average</th><th>Your score (0-100)</th><th>Remarks</th><th>Place</th></tr></thead>
+    <tbody>{% for b in board %}{% set m = mine.get(b.reg_id) %}
+    <tr><td>{{ b.reg_id }}</td><td>{{ b.team_name or b.full_name }}{% if b.team_name %}<br><span class="small muted">{{ b.full_name }}</span>{% endif %}</td>
+      <td class="small">{{ b.college_name or '' }}</td><td class="num">{{ b.judges }}</td><td class="num"><b>{{ b.avg_score if b.avg_score is not none else '—' }}</b></td>
+      <td><input type="number" name="score_{{ b.reg_id }}" min="0" max="100" step="0.5" value="{{ m.score if m else '' }}" aria-label="Score for {{ b.full_name }}"></td>
+      <td><input type="text" name="remarks_{{ b.reg_id }}" maxlength="255" value="{{ m.remarks if m and m.remarks else '' }}" aria-label="Remarks"></td>
+      <td>{% if b.position %}{{ medal(b.position) }}{% endif %}</td></tr>
+    {% endfor %}</tbody></table></div>
+  <div class="btn-row mt-1"><button class="btn" name="action" value="scores">Save my scores</button></div>
+</form>
+
+<div class="grid grid-2">
+  <form method="post" class="card form">
+    {{ csrf() }}
+    <h3 class="mb-0">Winners</h3>
+    <p class="small muted mb-0">Pick manually or use the top three by average score.</p>
+    {% for pos in (1, 2, 3) %}
+    <div class="field"><label for="pos{{ pos }}">{{ {1: '1st', 2: '2nd', 3: '3rd'}[pos] }} place</label>
+      <select id="pos{{ pos }}" name="pos{{ pos }}"><option value="">Not awarded</option>
+        {% for b in board %}<option value="{{ b.reg_id }}" {{ 'selected' if winners.get(pos) == b.reg_id }}>{{ b.team_name or b.full_name }} ({{ b.avg_score if b.avg_score is not none else 'no score' }})</option>{% endfor %}</select></div>
+    {% endfor %}
+    <div class="btn-row"><button class="btn" name="action" value="winners">Save winners</button><button class="btn ghost" name="action" value="auto" data-multi>Use top 3 by score</button></div>
+  </form>
+  <section class="card stack">
+    <h3 class="mb-0">Publish</h3>
+    <p class="mb-0">Publishing shows the winners on the public Results page, adds points to the college championship, marks the event completed and e-mails every attendee that their certificate is ready.</p>
+    <form method="post">{{ csrf() }}
+      {% if e.results_published %}<button class="btn ghost" name="action" value="unpublish">Hide results</button>
+      {% else %}<button class="btn gold" name="action" value="publish">Publish results</button>{% endif %}</form>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

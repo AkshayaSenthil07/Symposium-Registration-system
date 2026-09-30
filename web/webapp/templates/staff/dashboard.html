@@ -1,0 +1,38 @@
+{% extends "app_base.html" %}
+{% import "charts.html" as charts %}
+{% block title %}Dashboard{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Dashboard</h1><p>{{ site.symposium_name }} · {{ now.strftime('%A, %d %B %Y') }}{% if current_user.role == 'COORDINATOR' %} · your events only{% endif %}</p></div>
+  <div class="btn-row"><a class="btn gold" href="{{ url_for('staff.checkin') }}">Open QR check-in</a>
+  {% if current_user.role in ('ADMIN', 'CASHIER') %}<a class="btn ghost" href="{{ url_for('staff.desk') }}">Registration desk</a>{% endif %}</div></div>
+
+{% if to_verify %}<div class="alert warn"><b>{{ to_verify }} UPI payment(s) waiting for verification.</b> <a href="{{ url_for('staff.payments') }}">Verify now</a> or upload the bank statement to match them automatically.</div>{% endif %}
+
+<div class="grid grid-4 mb-2">
+  <div class="card stat-card"><div class="label">Confirmed registrations</div><div class="value">{{ s.confirmed }}</div><div class="small muted">+{{ s.today }} today · {{ s.people }} people</div></div>
+  <div class="card stat-card ok"><div class="label">Checked in</div><div class="value">{{ s.checked_in }}</div><div class="small muted">of {{ s.confirmed }} confirmed</div></div>
+  {% if current_user.role != 'COORDINATOR' %}
+  <div class="card stat-card info"><div class="label">Collected</div><div class="value">{{ s.collected|money }}</div><div class="small muted">UPI {{ s.upi|money }} · Online {{ s.gateway|money }} · Cash {{ s.cash|money }}</div></div>
+  {% endif %}
+  <div class="card stat-card warn"><div class="label">Pending / waitlisted</div><div class="value">{{ s.pending }} / {{ s.waitlisted }}</div><div class="small muted">{{ s.to_verify }} UPI to verify</div></div>
+</div>
+
+<div class="grid grid-2">
+  <section class="card">
+    <div class="card-head"><h3 class="mb-0">Registrations by event</h3><span class="small muted">filled / capacity</span></div>
+    {% if bar.bars %}{{ charts.bars(bar) }}{% else %}<p class="empty">No events yet.</p>{% endif %}
+  </section>
+  <section class="card">
+    {% if line %}
+    <div class="card-head"><h3 class="mb-0">Registrations per day</h3><span class="small muted">last 14 days</span></div>
+    {{ charts.line(line) }}
+    {% endif %}
+    <div class="card-head mt-2"><h3 class="mb-0">Today's events</h3></div>
+    {% if todays %}
+    <ul class="list-plain">{% for e in todays %}<li class="row between"><span><b>{{ e.event_name }}</b><br><span class="small muted">{{ e.start_time|time }} – {{ e.attended }} / {{ e.confirmed }} checked in</span></span>
+      <a class="btn sm ghost" href="{{ url_for('staff.registrations', event=e.event_id) }}">List</a></li>{% endfor %}</ul>
+    {% else %}<p class="muted mb-0">No events today.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

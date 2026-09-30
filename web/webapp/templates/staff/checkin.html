@@ -1,0 +1,46 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, status_badge %}
+{% block title %}QR check-in{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>QR check-in</h1><p>Scan the participant's QR ticket with this device's camera, a USB scanner, or type the 12-character code.</p></div></div>
+<div class="grid grid-2">
+  <section class="card stack">
+    <form method="get" class="row" id="code-form">
+      <input type="text" name="code" id="code" value="{{ code }}" placeholder="Ticket code or scanned link" class="mono" autocomplete="off" autofocus aria-label="Ticket code">
+      <button class="btn" type="submit">Look up</button>
+    </form>
+    <div class="scanner">
+      <button class="btn ghost" type="button" id="start-camera">Use camera</button>
+      <video id="camera" class="hidden" playsinline muted></video>
+      <p class="small muted mb-0" id="camera-note">A USB barcode scanner works too - it types into the box above and presses Enter.</p>
+    </div>
+  </section>
+  <section>
+    {% if result %}
+    <div class="scan-result {{ result.kind }} stack">
+      <h2 class="mb-0">{{ result.title }}</h2>
+      <p class="mb-0">{{ result.msg }}</p>
+      {% if result.r %}{% set r = result.r %}
+      <dl class="kv">
+        <dt>Name</dt><dd>{{ r.full_name }}</dd>
+        <dt>College</dt><dd>{{ r.college_name or '—' }}</dd>
+        <dt>Event</dt><dd>{{ r.event_name }}</dd>
+        <dt>When</dt><dd>{{ r.event_date|date }}, {{ r.start_time|time }}</dd>
+        {% if r.team_name %}<dt>Team</dt><dd>{{ r.team_name }} ({{ r.team_size }})</dd>{% endif %}
+        <dt>Status</dt><dd>{{ status_badge(r.status) }} {% if r.payment_status %}{{ status_badge(r.payment_status) }}{% endif %}</dd>
+      </dl>
+      {% if team %}<p class="small mb-0">Members: {{ r.full_name }}, {{ team|map(attribute='member_name')|join(', ') }}</p>{% endif %}
+      {% if result.confirm %}
+      <form method="post">{{ csrf() }}<input type="hidden" name="code" value="{{ code }}"><input type="hidden" name="confirm" value="1">
+        <button class="btn ok block" type="submit">Confirm entry</button></form>
+      {% endif %}
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="card empty">Scan a ticket to see the result here.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/scanner.js') }}"></script>{% endblock %}

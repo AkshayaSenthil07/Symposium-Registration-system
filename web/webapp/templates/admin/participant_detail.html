@@ -1,0 +1,20 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, status_badge %}
+{% block title %}{{ p.full_name }}{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ p.full_name }}</h1><p>{{ p.email }} · {{ p.phone or 'no phone' }} · joined {{ p.created_at|date }}</p></div>
+  <a class="btn ghost" href="{{ url_for('admin.participants') }}">&larr; Participants</a></div>
+<div class="grid grid-2">
+  <section class="card"><dl class="kv"><dt>College</dt><dd>{{ p.college_name }}</dd><dt>Department</dt><dd>{{ p.dept_name }}</dd><dt>Year</dt><dd>{{ p.year_of_study }}</dd>
+    <dt>E-mail verified</dt><dd>{{ 'Yes' if p.email_verified else 'No' }}</dd><dt>Account</dt><dd>{{ 'Active' if p.is_active else 'Disabled' }}</dd><dt>Last sign-in</dt><dd>{{ p.last_login|date if p.last_login else 'Never' }}</dd></dl></section>
+  <section class="card stack"><h3 class="mb-0">Account actions</h3>
+    <form method="post">{{ csrf() }}<button class="btn ghost" name="action" value="reset">E-mail a password-reset link</button></form>
+    {% if not p.email_verified %}<form method="post">{{ csrf() }}<button class="btn ghost" name="action" value="verify">Mark e-mail as verified</button></form>{% endif %}
+    <form method="post" data-confirm="{{ 'Disable' if p.is_active else 'Enable' }} this account?">{{ csrf() }}<button class="btn {{ 'danger' if p.is_active else 'ok' }}" name="action" value="toggle">{{ 'Disable account' if p.is_active else 'Enable account' }}</button></form></section>
+</div>
+<h2 class="mt-3">Registrations</h2>
+<div class="table-wrap"><table><thead><tr><th>Reg</th><th>Event</th><th>Payment</th><th>Status</th><th>In</th></tr></thead>
+<tbody>{% for r in regs %}<tr><td><a href="{{ url_for('staff.registration', reg_id=r.reg_id) }}">{{ r.reg_id }}</a></td><td>{{ r.event_name }}</td><td>{% if r.payment_status %}{{ status_badge(r.payment_status) }} {{ r.amount|money }}{% endif %}</td><td>{{ status_badge(r.status) }}</td><td>{{ '✓' if r.attended else '' }}</td></tr>
+{% else %}<tr><td colspan="5" class="empty">No registrations.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

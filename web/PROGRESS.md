@@ -20,13 +20,14 @@ Database: `symposium_live` (separate from the desktop version's `symposium_db`).
 ## Stages
 - [x] A. Skeleton: config, DB layer, schema, security basics, layout, public pages, news ticker, auth
 - [x] B. Participant: event registration (team, coupon, early bird, waitlist), payments, QR ticket, receipt
-- [ ] C. Staff/admin core: dashboard, events (venue clash, change notices), registrations, desk walk-in,
+- [x] C. Staff/admin core: dashboard, events (venue clash, change notices), registrations, desk walk-in,
         payment verification + bank CSV reconciliation, QR check-in, staff roles
-- [ ] D. Results & scoring, certificates + verify page, feedback, news admin, coupons admin, e-mail
-- [ ] E. Settings (branding, payments, e-mail), reports, SQL console, audit, backups, demo data / go live
+- [x] D. Results & scoring, certificates + verify page, feedback, news admin, coupons admin, e-mail
+- [x] E. Settings (branding, payments, e-mail), reports, SQL console, audit, backups, demo data / go live
 - [ ] F. Tests (incl. concurrency), security review, responsive check, docs (README, DEPLOY, ADMIN GUIDE)
 
 ## Log
 - 2026-09-30: Stage A done - schema (symposium_live + limited MySQL users), config, DB pool with reconnect, security (CSRF, headers/CSP, rate limits, PBKDF2, tokens), public pages + flash-news ticker, auth (signup/verify/login lockout/forgot/reset/change password). Smoke-tested.
 - 2026-09-30: Stage B done - registration transaction (row lock, team size, coupons, early bird, clash, limits, waitlist), UPI QR + UTR submission, mock/Razorpay gateway with signature + amount verification + webhook, cash hold, QR ticket, PDF receipt/certificate, notifications, participant pages. Tested (ticket QR needs staff.checkin from stage C).
 - 2026-09-30: WIP - staff + admin blueprints, reports, cashdesk (UTR verify, bank CSV reconcile), backups, demo/go-live services written. NEXT: staff/admin templates, then test stages C-E.
+- 2026-09-30: Stages C, D, E done - staff/admin UI (dashboard + SVG charts, QR check-in with camera, desk walk-ins, payments verify/reject, bank CSV reconcile, cash report, registrations + CSV + attendance PDF, scoring/publish, events with venue clash + change announcements, news, participants, staff roles, coupons, lists, feedback, 10 reports, read-only SQL console, audit, outbox, settings incl. gateway/SMTP, backups + restore, demo data / go live). 85-page crawl for 4 roles: 0 failures; action tests all pass. NEXT: Stage F (pytest suite + concurrency, security review, responsive check, docs).

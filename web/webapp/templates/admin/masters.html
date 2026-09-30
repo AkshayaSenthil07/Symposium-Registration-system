@@ -1,0 +1,20 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}{{ title }}{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Venues &amp; lists</h1><p>Lists used by events and sign-up forms.</p></div></div>
+<nav class="tabs">{% for k, v in kinds.items() %}<a href="{{ url_for('admin.masters', kind=k) }}" class="{{ 'active' if k == kind }}">{{ v[0] }}</a>{% endfor %}</nav>
+<form method="post" class="card form mb-2">
+  {{ csrf() }}<input type="hidden" name="kind" value="{{ kind }}">{% if edit %}<input type="hidden" name="id" value="{{ edit.id }}">{% endif %}
+  <h3 class="mb-0">{{ 'Edit' if edit else 'Add' }} - {{ title }}</h3>
+  <div class="form-grid">{% for c, label, maxlen in cols %}
+    <div class="field"><label for="{{ c }}">{{ label }}</label><input type="{{ 'number' if maxlen == 0 else 'text' }}" id="{{ c }}" name="{{ c }}" {{ 'min=1' if maxlen == 0 }} maxlength="{{ maxlen or 10 }}" value="{{ edit[c] if edit and edit[c] is not none else '' }}" {{ 'required' if loop.first or maxlen == 0 }}></div>{% endfor %}</div>
+  <div class="btn-row"><button class="btn gold" type="submit">Save</button>{% if edit %}<a class="btn ghost" href="{{ url_for('admin.masters', kind=kind) }}">Cancel</a>{% endif %}</div>
+</form>
+<div class="table-wrap"><table><thead><tr>{% for c, label, _ in cols %}<th>{{ label }}</th>{% endfor %}<th></th></tr></thead>
+<tbody>{% for r in rows %}<tr>{% for c, _, _ in cols %}<td>{{ r[c] if r[c] is not none else '' }}</td>{% endfor %}
+  <td><div class="btn-row"><a class="btn sm" href="{{ url_for('admin.masters', kind=kind, edit=r.id) }}">Edit</a>
+  <form method="post" data-confirm="Delete this item? (Only possible if nothing uses it.)">{{ csrf() }}<input type="hidden" name="kind" value="{{ kind }}"><input type="hidden" name="id" value="{{ r.id }}"><button class="btn sm danger" name="action" value="delete">Delete</button></form></div></td></tr>
+{% else %}<tr><td colspan="{{ cols|length + 1 }}" class="empty">Nothing yet.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

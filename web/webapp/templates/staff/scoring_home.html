@@ -1,0 +1,14 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import status_badge %}
+{% block title %}Scoring & results{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Scoring &amp; results</h1><p>Enter judges' scores for attendees, pick the winners and publish the results.</p></div></div>
+{% if events %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Event</th><th>Date</th><th class="num">Checked in</th><th>Status</th><th>Results</th><th></th></tr></thead>
+  <tbody>{% for e in events %}<tr><td><b>{{ e.event_name }}</b></td><td>{{ e.event_date|date }}</td><td class="num">{{ e.attended }}</td><td>{{ status_badge(e.status) }}</td>
+    <td>{{ '<span class="badge ok">Published</span>'|safe if e.results_published else '<span class="badge">Not published</span>'|safe }}</td>
+    <td><a class="btn sm" href="{{ url_for('staff.scoring', event_id=e.event_id) }}">Open</a></td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="card empty">No events are assigned to you yet. An admin can assign you in Events &rsaquo; Edit.</div>{% endif %}
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, password %}
+{% block title %}Demo / go live{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Demo data &amp; going live</h1><p>The site is currently in <b>{{ site.data_mode|upper }}</b> mode.</p></div></div>
+<div class="grid grid-2">
+  <form method="post" class="card form">
+    {{ csrf() }}<input type="hidden" name="action" value="demo">
+    <h3 class="mb-0">Load demo data</h3>
+    <p class="mb-0">Adds sample events, ~40 participants, payments in every state, a completed event with published results, news, coupons and demo staff accounts (password <span class="mono">Demo@1234</span>). Everything added is marked as demo.</p>
+    {% if c.demo_events %}<div class="alert info mb-0">Demo data is already loaded ({{ c.demo_users }} demo users, {{ c.demo_events }} demo events).</div>
+    {% elif c.real_people %}<div class="alert warn mb-0">Real participants exist - demo data cannot be loaded on a live site.</div>
+    {% else %}{{ password('password', 'Your password') }}<div><button class="btn" type="submit">Load demo data</button></div>{% endif %}
+    {% if sample %}<p class="small mb-0"><a href="{{ url_for('admin.sample_statement') }}">Download the sample bank statement</a> to demo UPI reconciliation (Payments page).</p>{% endif %}
+  </form>
+  <form method="post" class="card form" data-confirm="This permanently deletes all participants, registrations, payments and demo data. A backup is taken first. Continue?">
+    {{ csrf() }}<input type="hidden" name="action" value="golive">
+    <h3 class="mb-0">Go live</h3>
+    <p class="mb-0">Removes <b>every participant, registration, payment and e-mail</b>, plus demo events, news, coupons and demo staff. Keeps venues, categories, departments, settings, real events and real staff accounts.</p>
+    <ol class="small">
+      <li>Create your real admin account in Staff accounts{% if not c.real_admins %} <b>(needed - none yet)</b>{% endif %}.</li>
+      <li>Create the real events (or edit the demo ones and untick nothing - demo events are removed).</li>
+      <li>Set the UPI ID, gateway keys and e-mail in Settings.</li>
+    </ol>
+    <div class="field"><label for="confirm_text">Type GO LIVE to confirm</label><input type="text" id="confirm_text" name="confirm_text" autocomplete="off" required></div>
+    {{ password('password', 'Your password') }}
+    <div><button class="btn danger" type="submit" {{ 'disabled' if not c.real_admins }}>Go live</button></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Payments{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Payments</h1><p>Verify UPI references, record cash and match the bank statement.</p></div></div>
+
+<section class="card mb-2">
+  <div class="card-head"><h3 class="mb-0">Match with the bank statement (recommended)</h3></div>
+  <p>Download the account statement from net banking as <b>CSV</b> and upload it here. Every UPI reference (UTR) that matches a submitted payment with the right amount is confirmed automatically. You can upload the same file again safely.</p>
+  <form method="post" action="{{ url_for('staff.reconcile') }}" enctype="multipart/form-data" class="row">
+    {{ csrf() }}
+    <input type="file" name="statement" accept=".csv,text/csv" required aria-label="Bank statement CSV">
+    <button class="btn gold" type="submit">Upload &amp; match</button>
+    {% if current_user.role == 'ADMIN' and site.data_mode == 'demo' %}<a class="small" href="{{ url_for('admin.sample_statement') }}">Download the demo bank statement</a>{% endif %}
+  </form>
+</section>
+
+<section class="mb-2">
+  <h2>UPI references waiting for verification ({{ submitted|length }})</h2>
+  {% if submitted %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Reg</th><th>Participant</th><th>Event</th><th class="num">Amount</th><th>UTR</th><th>Submitted</th><th>Action</th></tr></thead>
+    <tbody>{% for p in submitted %}
+    <tr><td><a href="{{ url_for('staff.registration', reg_id=p.reg_id) }}">{{ p.reg_id }}</a></td><td>{{ p.full_name }}<br><span class="small muted">{{ p.phone }}</span></td>
+      <td>{{ p.event_name }}</td><td class="num">{{ p.amount|money }}</td><td class="mono">{{ p.utr }}</td><td class="small">{{ p.created_at|date }}</td>
+      <td><div class="btn-row">
+        <form method="post" data-confirm="Only verify if you have seen {{ p.amount|money }} with UTR {{ p.utr }} in the bank account. Continue?">{{ csrf() }}<input type="hidden" name="payment_id" value="{{ p.payment_id }}"><button class="btn sm ok" name="action" value="verify">Verify</button></form>
+        <form method="post" class="row">{{ csrf() }}<input type="hidden" name="payment_id" value="{{ p.payment_id }}"><input type="text" name="reason" placeholder="Reason" maxlength="150" aria-label="Rejection reason"><button class="btn sm danger" name="action" value="reject">Reject</button></form>
+      </div></td></tr>
+    {% endfor %}</tbody></table></div>
+  {% else %}<div class="card empty">Nothing to verify right now.</div>{% endif %}
+</section>
+
+<section class="mb-2">
+  <h2>Unpaid registrations ({{ pending|length }})</h2>
+  {% if pending %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Reg</th><th>Participant</th><th>Event</th><th>Method chosen</th><th class="num">Amount</th><th>Hold until</th><th></th></tr></thead>
+    <tbody>{% for p in pending %}
+    <tr><td><a href="{{ url_for('staff.registration', reg_id=p.reg_id) }}">{{ p.reg_id }}</a></td><td>{{ p.full_name }}<br><span class="small muted">{{ p.phone }}</span></td><td>{{ p.event_name }}</td>
+      <td>{{ {'UPI_QR': 'UPI QR', 'GATEWAY': 'Online', 'CASH': 'Pay at desk'}[p.method] }}</td><td class="num">{{ p.amount|money }}</td><td class="small">{{ p.hold_expires_at|date if p.hold_expires_at else '—' }}</td>
+      <td><form method="post" data-confirm="Record {{ p.amount|money }} cash from {{ p.full_name }}?">{{ csrf() }}<input type="hidden" name="reg_id" value="{{ p.reg_id }}"><button class="btn sm" name="action" value="cash">Cash received</button></form></td></tr>
+    {% endfor %}</tbody></table></div>
+  {% else %}<div class="card empty">No unpaid registrations.</div>{% endif %}
+</section>
+
+<section>
+  <h2>Bank credits not matched to any registration ({{ bank|length }})</h2>
+  <p class="small muted">Usually payments where the student did not submit the reference yet, or typed it wrongly. Search the UTR in Registrations or contact the payer.</p>
+  {% if bank %}
+  <div class="table-wrap"><table><thead><tr><th>Date</th><th>UTR</th><th class="num">Amount</th><th>Narration</th></tr></thead>
+    <tbody>{% for b in bank %}<tr><td>{{ b.txn_date|date if b.txn_date else '' }}</td><td class="mono">{{ b.utr }}</td><td class="num">{{ b.amount|money }}</td><td class="small">{{ b.narration }}</td></tr>{% endfor %}</tbody></table></div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -74,6 +74,10 @@
     });
   });
 
+  document.querySelectorAll("[data-print]").forEach(function (b) {
+    b.addEventListener("click", function () { window.print(); });
+  });
+
   // team member rows
   var addBtn = document.getElementById("add-member");
   if (addBtn) {

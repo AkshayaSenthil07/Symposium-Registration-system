@@ -1,0 +1,13 @@
+{% extends "app_base.html" %}
+{% block title %}Reports{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Reports</h1><p>Analytical queries on the live database - export any report to CSV (Excel) or PDF.</p></div></div>
+<nav class="tabs">{% for k, v in all_reports.items() %}<a href="{{ url_for('admin.reports', r=k) }}" class="{{ 'active' if k == key }}">{{ v[0] }}</a>{% endfor %}</nav>
+<div class="card-head"><h2 class="mb-0">{{ title }} <span class="small muted">({{ rows|length }} rows)</span></h2>
+  <div class="btn-row"><a class="btn ghost" href="{{ url_for('admin.reports', r=key, format='csv') }}">CSV</a><a class="btn ghost" href="{{ url_for('admin.reports', r=key, format='pdf') }}" target="_blank">PDF</a></div></div>
+<div class="table-wrap"><table><thead><tr>{% for c in cols %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+<tbody>{% for row in rows %}<tr>{% for v in row %}<td>{{ v|date if v.__class__.__name__ in ('date', 'datetime') else (v if v is not none else '') }}</td>{% endfor %}</tr>
+{% else %}<tr><td colspan="{{ cols|length }}" class="empty">No data.</td></tr>{% endfor %}</tbody></table></div>
+<details class="mt-2"><summary class="small">Show SQL</summary><div class="code-box mt-1">{{ sql }}</div></details>
+{% endblock %}

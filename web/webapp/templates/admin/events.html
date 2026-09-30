@@ -1,0 +1,30 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, status_badge %}
+{% block title %}Events{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Events</h1><p>Create events, change timings, open or close registrations. Changes to date, time or venue can be announced automatically.</p></div>
+  <a class="btn gold" href="{{ url_for('admin.event_new') }}">+ New event</a></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Event</th><th>When</th><th>Venue</th><th class="num">Fee</th><th class="num">Filled</th><th class="num">Wait</th><th class="num">Revenue</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for e in events %}
+  <tr>
+    <td><b>{{ e.event_name }}</b><br><span class="small muted">{{ e.category_name }}{% if e.is_team %} · team {{ e.team_min }}–{{ e.team_max }}{% endif %}{% if not e.is_published %} · <b>hidden</b>{% endif %}{% if e.is_demo %} · demo{% endif %}</span></td>
+    <td class="small">{{ e.event_date|date }}<br>{{ e.start_time|time }}–{{ e.end_time|time }}</td>
+    <td class="small">{{ e.venue_name or 'Online' }}</td>
+    <td class="num">{{ e.current_price|money if e.current_price else 'Free' }}</td>
+    <td class="num">{{ e.registered }}/{{ e.max_participants }}</td>
+    <td class="num">{{ e.waitlisted }}</td>
+    <td class="num">{{ e.revenue|money }}</td>
+    <td>{{ status_badge(e.status) }}</td>
+    <td><div class="btn-row">
+      <a class="btn sm" href="{{ url_for('admin.event_edit', event_id=e.event_id) }}">Edit</a>
+      <form method="post" action="{{ url_for('admin.event_status', event_id=e.event_id) }}" class="row">{{ csrf() }}
+        <select name="status" aria-label="Change status">{% for s in ('OPEN', 'CLOSED', 'COMPLETED', 'CANCELLED') %}<option {{ 'selected' if s == e.status }}>{{ s }}</option>{% endfor %}</select>
+        <button class="btn sm ghost" type="submit">Set</button></form>
+    </div></td>
+  </tr>
+  {% else %}<tr><td colspan="9" class="empty">No events yet. Create the first one.</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}
