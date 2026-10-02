@@ -1,0 +1,14 @@
+{% extends "app_base.html" %}
+{% block title %}Cash report{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Collection report</h1><p>Money collected per cashier and method{% if not all %} on {{ day|date }}{% else %} (all days){% endif %}. Use it to hand over cash at the end of the day.</p></div>
+  <form method="get" class="row no-print"><input type="date" name="day" value="{{ day.isoformat() }}" aria-label="Day"><button class="btn ghost" type="submit">Show day</button><a class="btn ghost" href="?all=1">All days</a><button class="btn" type="button" data-print>Print</button></form></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Collected by</th><th>Method</th><th class="num">Payments</th><th class="num">Amount</th></tr></thead>
+  <tbody>{% for r in rows %}<tr><td>{{ r.cashier }}</td><td>{{ {'UPI_QR': 'UPI (verified)', 'GATEWAY': 'Online gateway', 'CASH': 'Cash', 'FREE': 'Free'}[r.method] }}</td><td class="num">{{ r.n }}</td><td class="num">{{ r.total|money }}</td></tr>
+  {% else %}<tr><td colspan="4" class="empty">No payments for this day.</td></tr>{% endfor %}</tbody>
+  {% if rows %}<tfoot><tr><th colspan="3">Total</th><th class="num">{{ total|money }}</th></tr></tfoot>{% endif %}
+</table></div>
+<p class="small muted mt-2">Online gateway payments reach the college bank account through the gateway's settlement (usually 1–2 working days).</p>
+{% endblock %}

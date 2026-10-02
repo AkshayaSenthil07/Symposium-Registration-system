@@ -1,0 +1,113 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, status_badge %}
+{% block title %}{{ r.event_name }}{% endblock %}
+{% block sidenav %}{% include "nav_participant.html" %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ r.event_name }}</h1><p>REG-{{ '%05d' % r.reg_id }} · {{ r.event_date|date }}, {{ r.start_time|time }} – {{ r.end_time|time }} · {{ r.venue_name or 'Online' }}</p></div>
+  <div class="row">{{ status_badge(r.status) }}</div>
+</div>
+
+{% if r.status == 'CONFIRMED' %}
+<section class="ticket mb-2">
+  <div class="stack">
+    <p class="eyebrow mb-0">Entry ticket</p>
+    <h2 class="mb-0">{{ r.full_name }}</h2>
+    <p class="mb-0">{{ r.college_name or '' }}</p>
+    {% if r.team_name %}<p class="mb-0">Team <b>{{ r.team_name }}</b> ({{ r.team_size }} members)</p>{% endif %}
+    <div class="code">{{ r.ticket_code }}</div>
+    <p class="small muted mb-0">{% if r.attended %}Checked in {{ r.checked_in_at|date }}.{% else %}Show this QR code at the venue. It is unique to you - don't share it.{% endif %}</p>
+    <div class="btn-row no-print"><a class="btn ghost sm" href="{{ url_for('participant.receipt', reg_id=r.reg_id) }}" target="_blank">Download receipt &amp; ticket (PDF)</a></div>
+  </div>
+  <img class="qr" src="{{ url_for('participant.ticket_qr', reg_id=r.reg_id) }}" alt="QR ticket {{ r.ticket_code }}">
+</section>
+{% elif r.status == 'WAITLISTED' %}
+<div class="alert info"><b>You're on the waitlist.</b> The event is full. If a seat opens up, we'll e-mail you and hold it for you for a limited time. No payment is needed until then.</div>
+{% elif r.status == 'CANCELLED' %}
+<div class="alert error"><b>This registration was cancelled.</b>{% if r.payment_status == 'REFUNDED' %} Your payment will be refunded as per the <a href="{{ url_for('public.legal', name='refunds') }}">refund policy</a>.{% endif %} If you think this is a mistake, contact the organisers.</div>
+{% endif %}
+
+{% if r.status == 'PENDING' and payment %}
+<section class="card mb-2">
+  <div class="card-head"><h2 class="mb-0">Complete your payment</h2><span class="badge warn">{{ payment.amount|money }} due</span></div>
+  {% if r.hold_expires_at and payment.status == 'PENDING' %}<p class="alert warn">Your seat is held until <b>{{ r.hold_expires_at|date }}</b>. After that it is released to others.</p>{% endif %}
+
+  {% if payment.method == 'UPI_QR' %}
+    {% if payment.status == 'SUBMITTED' %}
+      <div class="alert info mb-0"><b>Payment reference submitted:</b> <span class="mono">{{ payment.utr }}</span>. The organisers are matching it with the bank statement. You'll get an e-mail once it is confirmed. Your seat stays reserved meanwhile.</div>
+    {% elif upi %}
+      <div class="upi-box">
+        <img class="qr" src="{{ url_for('participant.upi_qr', reg_id=r.reg_id) }}" alt="UPI QR code for {{ payment.amount|money }}">
+        <div class="stack">
+          <ol class="steps">
+            <li><span>Scan the QR with any UPI app (GPay, PhonePe, Paytm, BHIM, bank app){% if true %} - or on this phone, <a href="{{ upi.uri }}">tap here to open your UPI app</a>{% endif %}.</span></li>
+            <li><span>Check the amount is exactly <b>{{ payment.amount|money }}</b> and pay to <span class="mono">{{ upi.upi_id }}</span>.</span></li>
+            <li><span>Copy the <b>UPI reference / UTR number</b> (12 digits) from the payment success screen and submit it below.</span></li>
+          </ol>
+          <form method="post" action="{{ url_for('payments.submit_utr', reg_id=r.reg_id) }}" class="row">
+            {{ csrf() }}
+            <input type="text" name="utr" placeholder="12-digit UPI reference (UTR)" maxlength="22" required pattern="[A-Za-z0-9]{8,22}" class="mono" aria-label="UPI reference number">
+            <button class="btn" type="submit">Submit reference</button>
+          </form>
+          <p class="small muted mb-0">Never share your UPI PIN with anyone. The organisers will never ask for it.</p>
+        </div>
+      </div>
+    {% else %}
+      <div class="alert warn mb-0">UPI QR payments are not set up yet. Please choose another method below or contact the organisers.</div>
+    {% endif %}
+  {% elif payment.method == 'GATEWAY' %}
+    <p>Pay securely with UPI or net banking through our payment gateway. You'll be confirmed instantly.{% if fee %} A convenience fee of {{ fee|money }} applies.{% endif %}</p>
+    <form method="post" action="{{ url_for('payments.start_online', reg_id=r.reg_id) }}">{{ csrf() }}<button class="btn gold" type="submit">Pay {{ (payment.amount + fee)|money }} online</button></form>
+  {% elif payment.method == 'CASH' %}
+    <p class="mb-0">Please pay <b>{{ payment.amount|money }}</b> at the registration desk{% if site.venue_address %} ({{ site.venue_address }}){% endif %}. Show your registration ID <b>REG-{{ '%05d' % r.reg_id }}</b>. You'll get your QR ticket as soon as the cashier records the payment.</p>
+  {% endif %}
+
+  {% if payment.status == 'PENDING' and methods|length > 1 %}
+  <form method="post" action="{{ url_for('payments.change_method', reg_id=r.reg_id) }}" class="row mt-2">
+    {{ csrf() }}
+    <label for="method" class="small">Prefer another way?</label>
+    <select id="method" name="method">
+      {% for m in methods %}<option value="{{ m }}" {{ 'selected' if m == payment.method }}>{{ {'UPI_QR': 'UPI QR code', 'GATEWAY': 'Pay online (UPI / Net banking)', 'CASH': 'Pay at the desk'}[m] }}</option>{% endfor %}
+    </select>
+    <button class="btn ghost sm" type="submit">Change</button>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+
+<div class="grid grid-2">
+  <section class="card">
+    <h3>Details</h3>
+    <dl class="kv">
+      <dt>Participant</dt><dd>{{ r.full_name }}</dd>
+      <dt>Registered</dt><dd>{{ r.registered_at|date }}</dd>
+      <dt>Fee</dt><dd>{{ r.fee_amount|money if r.fee_amount else 'Free' }}</dd>
+      {% if r.payment_method %}<dt>Payment</dt><dd>{{ {'UPI_QR': 'UPI QR', 'GATEWAY': 'Online', 'CASH': 'Cash at desk', 'FREE': 'Free'}[r.payment_method] }} · {{ r.payment_status.title() }}</dd>{% endif %}
+      {% if r.utr or r.gateway_payment_id %}<dt>Reference</dt><dd class="mono">{{ r.utr or r.gateway_payment_id }}</dd>{% endif %}
+    </dl>
+    {% if team %}
+    <h3 class="mt-2">Team {{ r.team_name }}</h3>
+    <ul class="list-plain small"><li>{{ r.full_name }} <span class="badge">Leader</span></li>{% for m in team %}<li>{{ m.member_name }}{% if m.member_email %} · {{ m.member_email }}{% endif %}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if r.status != 'CONFIRMED' and r.status != 'CANCELLED' %}<p class="mt-2 mb-0"><a class="btn ghost sm" href="{{ url_for('participant.receipt', reg_id=r.reg_id) }}" target="_blank">Download registration slip</a></p>{% endif %}
+  </section>
+
+  {% if cert_available %}
+  <section class="card">
+    <h3>Certificate</h3>
+    {% if r.result_position and r.results_published %}<p><b>Congratulations!</b> You won <span class="medal p{{ r.result_position }}">{{ {1: 'First', 2: 'Second', 3: 'Third'}[r.result_position] }} place</span>.</p>{% endif %}
+    <p>Thank you for taking part. Your certificate can be verified online by anyone using the ID printed on it.</p>
+    <a class="btn ok" href="{{ url_for('participant.certificate', reg_id=r.reg_id) }}" target="_blank">Download certificate</a>
+    <hr class="divider">
+    <h3>Your feedback</h3>
+    <form method="post" action="{{ url_for('participant.feedback', reg_id=r.reg_id) }}" class="form">
+      {{ csrf() }}
+      <div class="field"><label for="rating">How was the event?</label>
+        <select id="rating" name="rating" required>{% for n in range(5, 0, -1) %}<option value="{{ n }}" {{ 'selected' if feedback and feedback.rating == n }}>{{ n }} - {{ {5: 'Excellent', 4: 'Good', 3: 'Okay', 2: 'Poor', 1: 'Bad'}[n] }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="comments">Comments <span class="hint">(optional)</span></label><textarea id="comments" name="comments" maxlength="500">{{ feedback.comments if feedback and feedback.comments else '' }}</textarea></div>
+      <button class="btn ghost" type="submit">{{ 'Update feedback' if feedback else 'Send feedback' }}</button>
+    </form>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

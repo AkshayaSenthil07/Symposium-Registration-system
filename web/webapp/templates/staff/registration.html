@@ -1,0 +1,47 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, status_badge %}
+{% block title %}Registration {{ r.reg_id }}{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>REG-{{ '%05d' % r.reg_id }} · {{ r.full_name }}</h1><p>{{ r.event_name }} · {{ r.event_date|date }} {{ r.start_time|time }}</p></div>
+  <div class="row">{{ status_badge(r.status) }}{% if r.attended %}<span class="badge ok">Checked in</span>{% endif %}</div></div>
+<div class="grid grid-2">
+  <section class="card">
+    <h3>Participant</h3>
+    <dl class="kv">
+      <dt>E-mail</dt><dd>{{ r.email }}</dd><dt>Phone</dt><dd>{{ r.phone or '—' }}</dd>
+      <dt>College</dt><dd>{{ r.college_name or '—' }}</dd><dt>Department</dt><dd>{{ r.dept_name or '—' }}, year {{ r.year_of_study }}</dd>
+      <dt>Ticket code</dt><dd class="mono">{{ r.ticket_code }}</dd><dt>Source</dt><dd>{{ r.source.title() }}</dd>
+      <dt>Registered</dt><dd>{{ r.registered_at|date }}</dd>
+      {% if r.team_name %}<dt>Team</dt><dd>{{ r.team_name }}: {{ r.full_name }}{% for m in team %}, {{ m.member_name }}{% endfor %}</dd>{% endif %}
+      {% if r.hold_expires_at %}<dt>Seat held until</dt><dd>{{ r.hold_expires_at|date }}</dd>{% endif %}
+    </dl>
+  </section>
+  <section class="card stack">
+    <h3>Actions</h3>
+    {% if r.status == 'CONFIRMED' %}
+      <form method="post">{{ csrf() }}<input type="hidden" name="action" value="attend"><input type="hidden" name="present" value="{{ '0' if r.attended else '1' }}">
+        <button class="btn {{ 'ghost' if r.attended else 'ok' }}" type="submit">{{ 'Mark absent' if r.attended else 'Mark present' }}</button></form>
+    {% endif %}
+    {% if r.status == 'PENDING' and current_user.role in ('ADMIN', 'CASHIER') %}
+      <form method="post" data-confirm="Record {{ r.fee_amount|money }} cash for this registration?">{{ csrf() }}<button class="btn" name="action" value="cash">Cash received ({{ r.fee_amount|money }})</button></form>
+    {% endif %}
+    <form method="post">{{ csrf() }}<button class="btn ghost" name="action" value="resend">Re-send registration e-mail</button></form>
+    {% if current_user.role in ('ADMIN', 'CASHIER') %}<a class="btn ghost" href="{{ url_for('staff.desk_receipt', reg_id=r.reg_id) }}" target="_blank">Receipt / ticket PDF</a>{% endif %}
+    {% if current_user.role == 'ADMIN' and r.status != 'CANCELLED' %}
+      <hr class="divider">
+      <form method="post" class="form" data-confirm="Cancel this registration? Successful payments are marked for refund and the seat goes to the waitlist.">
+        {{ csrf() }}
+        <div class="field"><label for="reason">Cancel registration (admin only)</label><input type="text" id="reason" name="reason" placeholder="Reason (sent to the participant)" maxlength="200" required></div>
+        <button class="btn danger" name="action" value="cancel">Cancel &amp; refund</button>
+      </form>
+    {% endif %}
+  </section>
+</div>
+<h2 class="mt-3">Payment history</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>#</th><th>Method</th><th class="num">Amount</th><th>Status</th><th>Reference</th><th>Handled by</th><th>Note</th><th>Paid</th></tr></thead>
+  <tbody>{% for p in history %}<tr><td>{{ p.payment_id }}</td><td>{{ p.method }}</td><td class="num">{{ p.amount|money }}</td><td>{{ status_badge(p.status) }}</td>
+    <td class="mono small">{{ p.utr or p.gateway_payment_id or '' }}</td><td class="small">{{ p.staff or '' }}</td><td class="small">{{ p.note or '' }}</td><td class="small">{{ p.paid_at|date if p.paid_at else '' }}</td></tr>
+  {% else %}<tr><td colspan="8" class="empty">No payments.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

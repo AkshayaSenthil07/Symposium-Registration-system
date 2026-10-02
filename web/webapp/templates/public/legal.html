@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="card auth-card wide">
+      <h1>{{ title }}</h1>
+      {% if name == 'contact' %}
+        <dl class="kv">
+          <dt>Organised by</dt><dd>{{ site.host_institution }}, {{ site.college_name }}</dd>
+          {% if site.contact_email %}<dt>E-mail</dt><dd><a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a></dd>{% endif %}
+          {% if site.contact_phone %}<dt>Phone</dt><dd><a href="tel:{{ site.contact_phone }}">{{ site.contact_phone }}</a></dd>{% endif %}
+          {% if site.venue_address %}<dt>Address</dt><dd>{{ site.venue_address }}</dd>{% endif %}
+        </dl>
+        <p class="mt-2 mb-0 muted">For event-specific questions, contact the coordinator listed on each event page.</p>
+      {% else %}
+        <p class="prewrap mb-0">{{ body }}</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

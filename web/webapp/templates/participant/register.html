@@ -1,0 +1,82 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, seat_bar %}
+{% block title %}Register · {{ e.event_name }}{% endblock %}
+{% block sidenav %}{% include "nav_participant.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Register: {{ e.event_name }}</h1>
+  <p>{{ e.event_date|date }}, {{ e.start_time|time }} – {{ e.end_time|time }} · {{ e.venue_name or 'Online' }}</p></div></div>
+
+{% if not current_user.email_verified %}
+<div class="alert warn">Please verify your e-mail address first. <form method="post" action="{{ url_for('auth.resend_verification') }}" class="inline">{{ csrf() }}<button class="linklike" type="submit">Resend the link</button></form></div>
+{% endif %}
+{% if not e.can_register %}<div class="alert error">Registrations are not open for this event.</div>{% endif %}
+
+<div class="grid grid-2">
+<form method="post" class="card form" novalidate>
+  {{ csrf() }}
+  {% if e.is_team %}
+  <fieldset>
+    <legend>Team details (team of {{ e.team_min }}{% if e.team_max > e.team_min %} to {{ e.team_max }}{% endif %}, including you)</legend>
+    <div class="field"><label for="team_name">Team name</label><input type="text" id="team_name" name="team_name" maxlength="60" value="{{ form.team_name }}" required></div>
+    <p class="small muted">You are the team leader. Add your teammates below.</p>
+    <div id="members" class="stack">
+      {% set names = form.getlist('member_name') if form else [] %}
+      {% set emails = form.getlist('member_email') if form else [] %}
+      {% set phones = form.getlist('member_phone') if form else [] %}
+      {% for i in range([names|length, e.team_min - 1]|max) %}
+      <div class="member form-grid">
+        <div class="field"><label>Member name</label><input type="text" name="member_name" maxlength="100" value="{{ names[i] if i < names|length else '' }}"></div>
+        <div class="field"><label>E-mail <span class="hint">(optional)</span></label><input type="email" name="member_email" maxlength="120" value="{{ emails[i] if i < emails|length else '' }}"></div>
+        <div class="field"><label>Phone <span class="hint">(optional)</span></label><input type="tel" name="member_phone" maxlength="10" value="{{ phones[i] if i < phones|length else '' }}"></div>
+        <div class="field"><label class="sr-only">Remove</label><button type="button" class="btn ghost sm" data-remove>Remove</button></div>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn ghost sm mt-1" id="add-member" data-max="{{ e.team_max - 1 }}">+ Add team member</button>
+    <template id="member-template">
+      <div class="member form-grid">
+        <div class="field"><label>Member name</label><input type="text" name="member_name" maxlength="100"></div>
+        <div class="field"><label>E-mail <span class="hint">(optional)</span></label><input type="email" name="member_email" maxlength="120"></div>
+        <div class="field"><label>Phone <span class="hint">(optional)</span></label><input type="tel" name="member_phone" maxlength="10"></div>
+        <div class="field"><label class="sr-only">Remove</label><button type="button" class="btn ghost sm" data-remove>Remove</button></div>
+      </div>
+    </template>
+  </fieldset>
+  {% endif %}
+
+  <div class="field"><label for="coupon">Coupon code <span class="hint">(optional)</span></label>
+    <div class="row"><input type="text" id="coupon" name="coupon" maxlength="30" value="{{ form.coupon }}" class="mono">
+      <button class="btn ghost" type="submit" name="action" value="quote" data-multi>Apply</button></div></div>
+
+  {% if price and price.total > 0 %}
+  <fieldset>
+    <legend>How will you pay?</legend>
+    <div class="radio-cards">
+      {% set chosen = form.method or methods[0] %}
+      {% if 'UPI_QR' in methods %}<label class="radio-card"><input type="radio" name="method" value="UPI_QR" {{ 'checked' if chosen == 'UPI_QR' }}><span><b>UPI QR code</b>Scan with GPay, PhonePe, Paytm or any UPI app. No extra charges. Confirmed after we verify the payment.</span></label>{% endif %}
+      {% if 'GATEWAY' in methods %}<label class="radio-card"><input type="radio" name="method" value="GATEWAY" {{ 'checked' if chosen == 'GATEWAY' }}><span><b>Pay online (UPI / Net banking)</b>Instant confirmation through a secure payment gateway.{% if fee %} Convenience fee {{ fee|money }}.{% endif %}</span></label>{% endif %}
+      {% if 'CASH' in methods %}<label class="radio-card"><input type="radio" name="method" value="CASH" {{ 'checked' if chosen == 'CASH' }}><span><b>Pay at the registration desk</b>Seat held for {{ (site.desk_hold_minutes|int // 60) or 1 }} hour(s). Pay in cash or UPI at the desk.</span></label>{% endif %}
+    </div>
+  </fieldset>
+  {% endif %}
+
+  <button class="btn gold block" type="submit" name="action" value="register" {{ 'disabled' if not e.can_register or not current_user.email_verified }}>
+    {{ 'Join the waitlist' if e.seats_left <= 0 else ('Register' if price and price.total == 0 else 'Reserve my seat') }}</button>
+  <p class="small muted mb-0">By registering you agree to the <a href="{{ url_for('public.legal', name='terms') }}">terms</a> and <a href="{{ url_for('public.legal', name='refunds') }}">refund policy</a>. Registrations can only be cancelled by the organisers.</p>
+</form>
+
+<aside class="card stack">
+  <h3>Summary</h3>
+  {% if price %}
+  <dl class="kv">
+    <dt>Event fee</dt><dd>{{ price.base|money }}</dd>
+    {% if price.price != price.base %}<dt>Early-bird price</dt><dd>{{ price.price|money }}</dd>{% endif %}
+    {% if price.discount %}<dt>Coupon {{ price.coupon.code }}</dt><dd>− {{ price.discount|money }}</dd>{% endif %}
+    <dt>Total</dt><dd>{{ price.total|money if price.total else 'Free' }}{% if e.is_team and price.total %} <span class="hint">per team</span>{% endif %}</dd>
+  </dl>
+  {% endif %}
+  {{ seat_bar(e) }}
+  {% if e.rules %}<details><summary>Event rules</summary><p class="prewrap small">{{ e.rules }}</p></details>{% endif %}
+</aside>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "email/_layout.html" %}
+{% block body %}
+<p>Hi {{ name }},</p>
+<p>We received a request to reset your password. Click below to choose a new one:</p>
+<p><a href="{{ link }}" style="display:inline-block;background:#2f5597;color:#ffffff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold">Reset my password</a></p>
+<p style="font-size:13px;color:#5e6b85">This link is valid for 1 hour and can be used once. If you did not ask for this, you can safely ignore this e-mail - your password will not change.</p>
+{% endblock %}

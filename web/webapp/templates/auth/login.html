@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, password %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <h1>Welcome back</h1>
+    <p class="muted">Sign in to register for events, see your tickets and download certificates.</p>
+    <form method="post" class="form" novalidate>
+      {{ csrf() }}
+      <div class="field"><label for="email">E-mail address</label>
+        <input type="email" id="email" name="email" value="{{ email }}" autocomplete="username" required maxlength="120" autofocus></div>
+      {{ password('password', 'Password') }}
+      <button class="btn block" type="submit">Sign in</button>
+    </form>
+    <p class="small mt-2 mb-0"><a href="{{ url_for('auth.forgot') }}">Forgot your password?</a></p>
+    {% if site.signups_open == '1' %}<p class="small mb-0">New here? <a href="{{ url_for('auth.signup') }}">Create an account</a></p>{% endif %}
+    {% if site.data_mode == 'demo' %}
+    <div class="demo-hint mt-2">
+      <b>Demo accounts</b> (password <span class="mono">Demo@1234</span>):<br>
+      admin@demo.symposium · cashier@demo.symposium · coordinator@demo.symposium · student@demo.symposium
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

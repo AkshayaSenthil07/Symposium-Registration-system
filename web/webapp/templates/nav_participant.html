@@ -1,0 +1,6 @@
+<div class="group">My symposium</div>
+<a href="{{ url_for('participant.dashboard') }}" class="{{ 'active' if ep == 'participant.dashboard' }}">Dashboard</a>
+<a href="{{ url_for('public.event_list') }}">Browse events</a>
+<a href="{{ url_for('participant.registrations') }}" class="{{ 'active' if ep in ('participant.registrations', 'participant.registration', 'participant.pay') }}">My registrations &amp; tickets</a>
+<a href="{{ url_for('participant.profile') }}" class="{{ 'active' if ep == 'participant.profile' }}">My profile</a>
+<a href="{{ url_for('public.results_page') }}">Results</a>

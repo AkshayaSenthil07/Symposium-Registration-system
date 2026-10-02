@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "macros.html" import event_card %}
+{% block title %}Events{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><p class="eyebrow">{{ site.symposium_name }}</p><h1 class="mb-0">Events</h1></div></div>
+    <form class="filters" method="get" role="search">
+      <div class="field"><label for="q">Search</label><input type="search" id="q" name="q" value="{{ q }}" placeholder="Event name or keyword"></div>
+      <div class="field"><label for="category">Category</label>
+        <select id="category" name="category" data-autosubmit>
+          <option value="">All categories</option>
+          {% for c in categories %}<option value="{{ c.category_id }}" {{ 'selected' if active_cat == c.category_id }}>{{ c.category_name }}</option>{% endfor %}
+        </select></div>
+      <button class="btn" type="submit">Filter</button>
+    </form>
+    {% if events %}
+    <div class="grid grid-3">{% for e in events %}{{ event_card(e) }}{% endfor %}</div>
+    {% else %}<div class="card empty">No events match your search.</div>{% endif %}
+  </div>
+</section>
+{% endblock %}

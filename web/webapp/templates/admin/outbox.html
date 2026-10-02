@@ -1,0 +1,16 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, status_badge %}
+{% block title %}E-mail outbox{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>E-mail outbox</h1>
+  <p>{% if mode == 'smtp' %}E-mails are being sent through your SMTP server.{% else %}<b>Demo mode:</b> e-mails are kept here and NOT sent. Configure SMTP in Settings to send real e-mail.{% endif %}</p></div>
+  <form method="post">{{ csrf() }}<button class="btn ghost" name="action" value="retry">Retry failed</button></form></div>
+{% if view %}
+<section class="card mb-2"><div class="card-head"><h3 class="mb-0">{{ view.subject }}</h3>{{ status_badge(view.status) }}</div>
+  <p class="small muted">To {{ view.to_email }} · {{ view.created_at|date }}</p><div class="code-box">{{ view.body_text }}</div></section>
+{% endif %}
+<div class="table-wrap"><table><thead><tr><th>When</th><th>To</th><th>Subject</th><th>Status</th><th></th></tr></thead>
+<tbody>{% for m in rows %}<tr><td class="small nowrap">{{ m.created_at|date }}</td><td class="small">{{ m.to_email }}</td><td>{{ m.subject }}{% if m.last_error %}<br><span class="small muted">{{ m.last_error }}</span>{% endif %}</td><td>{{ status_badge(m.status) }}</td>
+  <td><a class="btn sm ghost" href="{{ url_for('admin.outbox', id=m.mail_id) }}">View</a></td></tr>{% else %}<tr><td colspan="5" class="empty">No e-mails yet.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

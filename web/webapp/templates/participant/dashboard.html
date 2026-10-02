@@ -1,0 +1,43 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, status_badge %}
+{% block title %}My dashboard{% endblock %}
+{% block sidenav %}{% include "nav_participant.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Hi {{ current_user.first_name }}!</h1><p>Your events, tickets and payments at {{ site.symposium_name }}.</p></div>
+  <a class="btn gold" href="{{ url_for('public.event_list') }}">Browse events</a></div>
+
+{% if not current_user.email_verified %}
+<div class="alert warn">
+  <b>Verify your e-mail to register for events.</b> We sent a link to {{ current_user.email }}.
+  <form method="post" action="{{ url_for('auth.resend_verification') }}" class="inline">{{ csrf() }}<button class="linklike" type="submit">Send the link again</button></form>
+</div>
+{% endif %}
+
+{% for r in pending %}
+<div class="alert warn"><b>Payment pending:</b> {{ r.event_name }} — {{ r.fee_amount|money }}.
+  {% if r.payment_status == 'SUBMITTED' %}Your UPI reference is being verified.{% else %}<a href="{{ url_for('participant.registration', reg_id=r.reg_id) }}">Complete payment</a>{% if r.hold_expires_at %} before {{ r.hold_expires_at|date }}{% endif %}.{% endif %}</div>
+{% endfor %}
+
+<div class="grid grid-4 mb-2">
+  <div class="card stat-card"><div class="label">Registered events</div><div class="value">{{ regs|length }}</div></div>
+  <div class="card stat-card ok"><div class="label">Confirmed</div><div class="value">{{ regs|selectattr('status', 'equalto', 'CONFIRMED')|list|length }}</div></div>
+  <div class="card stat-card warn"><div class="label">Awaiting payment</div><div class="value">{{ pending|length }}</div></div>
+  <div class="card stat-card gold"><div class="label">Waitlisted</div><div class="value">{{ regs|selectattr('status', 'equalto', 'WAITLISTED')|list|length }}</div></div>
+</div>
+
+<h2>My events</h2>
+{% if regs %}
+<div class="grid grid-3">
+  {% for r in regs %}
+  <a class="card event-card cat-1" href="{{ url_for('participant.registration', reg_id=r.reg_id) }}">
+    <div class="row between"><span class="badge">{{ r.category_name }}</span>{{ status_badge(r.status) }}</div>
+    <h3 class="mb-0">{{ r.event_name }}</h3>
+    <div class="meta"><span>{{ r.event_date|date }}</span><span>{{ r.start_time|time }} – {{ r.end_time|time }}</span><span>{{ r.venue_name or 'Online' }}</span></div>
+    {% if r.status == 'CONFIRMED' %}<span class="small">{{ 'Attended ✓' if r.attended else 'Tap to show your QR ticket' }}</span>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card empty">You haven't registered for any events yet. <a href="{{ url_for('public.event_list') }}">Browse events</a></div>
+{% endif %}
+{% endblock %}

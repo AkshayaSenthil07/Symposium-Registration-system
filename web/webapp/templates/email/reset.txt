@@ -1,0 +1,9 @@
+Hi {{ name }},
+
+We received a request to reset your {{ site.symposium_name }} password. Open this link to choose a new one:
+
+{{ link }}
+
+The link is valid for 1 hour and can be used once. If you did not ask for this, ignore this e-mail.
+
+{{ site.host_institution }}, {{ site.college_name }}

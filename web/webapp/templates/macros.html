@@ -1,0 +1,55 @@
+{% macro flashes() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<div class="alert {{ cat if cat in ('success', 'error', 'info', 'warn') else 'info' }}" role="status">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro password(name, label, placeholder='', autocomplete='current-password', strength=false, hint='') %}
+<div class="field">
+  <label for="{{ name }}">{{ label }}</label>
+  <div class="pw-wrap">
+    <input type="password" id="{{ name }}" name="{{ name }}" placeholder="{{ placeholder }}" autocomplete="{{ autocomplete }}" required maxlength="128" {% if strength %}data-strength="#{{ name }}-meter"{% endif %}>
+    <button type="button" class="pw-toggle" aria-label="Show password">Show</button>
+  </div>
+  {% if strength %}<div class="strength" id="{{ name }}-meter"><i></i></div>{% endif %}
+  {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro price(e) %}{% if e.current_price == 0 %}Free{% else %}{{ e.current_price|money }}{% if e.early_bird_active %}<s>{{ e.registration_fee|money }}</s>{% endif %}{% endif %}{% endmacro %}
+
+{% macro seat_bar(e) %}
+  <progress class="seat-bar {{ 'full' if e.fill_pct >= 90 else ('high' if e.fill_pct >= 60 else '') }}" max="{{ e.max_participants }}" value="{{ [e.registered, e.max_participants]|min }}" aria-label="Seats filled"></progress>
+  <span class="small muted">{% if e.seats_left > 0 %}{{ e.seats_left }} of {{ e.max_participants }} seats left{% else %}Full{% if e.waitlisted %} · {{ e.waitlisted }} on waitlist{% endif %}{% endif %}</span>
+{% endmacro %}
+
+{% macro event_card(e, show_button=true) %}
+<article class="card event-card cat-{{ e.category_id }}">
+  <div class="row between">
+    <span class="badge">{{ e.category_name }}</span>
+    <span class="price">{{ price(e) }}</span>
+  </div>
+  <h3 class="mb-0"><a href="{{ url_for('public.event_detail', event_id=e.event_id) }}">{{ e.event_name }}</a></h3>
+  <div class="row">
+    {% if e.recently_changed %}<span class="badge pill-changed" title="{{ e.change_note }}">Updated</span>{% endif %}
+    {% if e.early_bird_active %}<span class="badge gold">Early bird</span>{% endif %}
+    {% if e.is_team %}<span class="badge info">Team of {{ e.team_min }}{% if e.team_max > e.team_min %}–{{ e.team_max }}{% endif %}</span>{% endif %}
+    {% if e.status != 'OPEN' %}<span class="badge {{ e.status }}">{{ e.status.title() }}</span>{% endif %}
+  </div>
+  <div class="meta">
+    <span>{{ e.event_date|date }}</span>
+    <span>{{ e.start_time|time }} – {{ e.end_time|time }}</span>
+    <span>{{ e.venue_name or 'Online' }}</span>
+  </div>
+  {% if e.description %}<p class="small mb-0">{{ e.description|truncate(130) }}</p>{% endif %}
+  <div class="spacer"></div>
+  {{ seat_bar(e) }}
+  {% if show_button %}<a class="btn {{ 'gold' if e.can_register else 'ghost' }} block" href="{{ url_for('public.event_detail', event_id=e.event_id) }}">{{ 'View & register' if e.can_register else 'View details' }}</a>{% endif %}
+</article>
+{% endmacro %}
+
+{% macro status_badge(s) %}<span class="badge {{ s }}">{{ s.replace('_', ' ').title() }}</span>{% endmacro %}
+
+{% macro medal(pos) %}<span class="medal p{{ pos }}">{{ {1: '1st', 2: '2nd', 3: '3rd'}[pos] }}</span>{% endmacro %}

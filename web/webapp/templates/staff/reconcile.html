@@ -1,0 +1,19 @@
+{% extends "app_base.html" %}
+{% block title %}Reconciliation result{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Bank statement matched</h1><p>{{ s.lines }} UPI credit(s) read from the file, {{ s.new }} new.</p></div>
+  <a class="btn" href="{{ url_for('staff.payments') }}">Back to payments</a></div>
+{% for n in s.notes %}<div class="alert warn">{{ n }}</div>{% endfor %}
+<div class="grid grid-4 mb-2">
+  <div class="card stat-card ok"><div class="label">Confirmed now</div><div class="value">{{ s.matched|length }}</div></div>
+  <div class="card stat-card warn"><div class="label">Amount too low</div><div class="value">{{ s.amount_mismatch|length }}</div></div>
+  <div class="card stat-card"><div class="label">Bank credits unmatched</div><div class="value">{{ s.unmatched }}</div></div>
+</div>
+{% if s.matched %}<div class="alert success">Confirmed registrations: {% for r in s.matched %}<a href="{{ url_for('staff.registration', reg_id=r) }}">#{{ r }}</a>{{ ', ' if not loop.last }}{% endfor %}. Each participant was e-mailed their ticket.</div>{% endif %}
+{% if s.amount_mismatch %}
+<h2>Paid less than the fee - check with the participant</h2>
+<div class="table-wrap"><table><thead><tr><th>Reg</th><th>UTR</th><th class="num">Paid</th><th class="num">Due</th></tr></thead>
+<tbody>{% for m in s.amount_mismatch %}<tr><td><a href="{{ url_for('staff.registration', reg_id=m.reg_id) }}">{{ m.reg_id }}</a></td><td class="mono">{{ m.utr }}</td><td class="num">{{ m.paid|money }}</td><td class="num">{{ m.due|money }}</td></tr>{% endfor %}</tbody></table></div>
+{% endif %}
+{% endblock %}

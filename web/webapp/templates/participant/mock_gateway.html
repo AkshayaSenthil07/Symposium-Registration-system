@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Demo payment gateway{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <p class="badge warn">Demo gateway - no real money</p>
+    <h1 class="mt-1">Pay {{ total|money }}</h1>
+    <p class="muted">{{ site.symposium_name }} · {{ r.event_name }}<br>Order <span class="mono">{{ order_id }}</span></p>
+    <p class="small">This page imitates the online payment step so the demo works without a gateway account. In live mode this is replaced by the real Razorpay window (UPI and net banking).</p>
+    <form method="post" class="form">
+      {{ csrf() }}
+      <div class="radio-cards">
+        <label class="radio-card"><input type="radio" name="via" value="upi" checked><span><b>UPI</b>Any UPI app</span></label>
+        <label class="radio-card"><input type="radio" name="via" value="netbanking"><span><b>Net banking</b>All major banks</span></label>
+      </div>
+      <div class="btn-row">
+        <button class="btn ok" type="submit" name="outcome" value="success">Simulate successful payment</button>
+        <button class="btn ghost" type="submit" name="outcome" value="fail" data-multi>Cancel payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

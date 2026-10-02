@@ -1,0 +1,36 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Registration desk{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Registration desk</h1><p>Register walk-in participants and collect payment on the spot.</p></div></div>
+<div class="grid grid-2">
+  <section class="card">
+    <h3>1. Find the participant</h3>
+    <form method="get" class="row"><input type="search" name="q" value="{{ q }}" placeholder="E-mail, phone or name" autofocus><button class="btn" type="submit">Search</button></form>
+    {% if q %}
+      {% if people %}
+      <ul class="list-plain mt-2">{% for p in people %}<li class="row between"><span><b>{{ p.full_name }}</b><br><span class="small muted">{{ p.email }} · {{ p.phone }} · {{ p.college_name }}</span></span>
+        <a class="btn sm" href="{{ url_for('staff.desk_person', user_id=p.user_id) }}">Select</a></li>{% endfor %}</ul>
+      {% else %}<p class="muted mt-2 mb-0">No participant found. Create a new account on the right.</p>{% endif %}
+    {% endif %}
+  </section>
+  <section class="card">
+    <h3>Or create a new participant</h3>
+    <form method="post" action="{{ url_for('staff.desk_new') }}" class="form">
+      {{ csrf() }}
+      <div class="form-grid">
+        <div class="field"><label for="full_name">Full name</label><input type="text" id="full_name" name="full_name" required maxlength="100"></div>
+        <div class="field"><label for="phone">Mobile</label><input type="tel" id="phone" name="phone" required maxlength="10" pattern="[0-9]{10}"></div>
+        <div class="field full"><label for="email">E-mail</label><input type="email" id="email" name="email" required maxlength="120" value="{{ q if '@' in q else '' }}"></div>
+        <div class="field full"><label for="college">College</label><input type="text" id="college" name="college" list="colleges" required maxlength="150">
+          <datalist id="colleges">{% for c in colleges %}<option value="{{ c.college_name }}">{% endfor %}</datalist></div>
+        <div class="field"><label for="dept_id">Department</label><select id="dept_id" name="dept_id" required><option value="">Select</option>{% for d in departments %}<option value="{{ d.dept_id }}">{{ d.dept_name }}</option>{% endfor %}</select></div>
+        <div class="field"><label for="year">Year</label><select id="year" name="year" required>{% for y in range(1, 6) %}<option value="{{ y }}">Year {{ y }}</option>{% endfor %}</select></div>
+      </div>
+      <button class="btn gold" type="submit">Create account</button>
+      <p class="small muted mb-0">The participant gets an e-mail to set their own password. The desk never needs to know it.</p>
+    </form>
+  </section>
+</div>
+{% endblock %}

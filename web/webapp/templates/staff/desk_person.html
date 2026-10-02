@@ -1,0 +1,50 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, status_badge %}
+{% block title %}Desk · {{ p.full_name }}{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ p.full_name }}</h1><p>{{ p.email }} · {{ p.phone }} · {{ p.college_name }} · {{ p.dept_name }}, year {{ p.year_of_study }}</p></div>
+  <a class="btn ghost" href="{{ url_for('staff.desk') }}">&larr; Next participant</a></div>
+
+<div class="grid grid-2">
+<form method="post" class="card form">
+  {{ csrf() }}
+  <h3 class="mb-0">2. Choose events</h3>
+  <div class="stack">
+  {% for e in open_events %}
+    {% set done = e.event_id in taken %}
+    <div class="radio-card">
+      <input type="checkbox" name="event_id" value="{{ e.event_id }}" id="ev{{ e.event_id }}" {{ 'disabled' if done }}>
+      <label for="ev{{ e.event_id }}"><b>{{ e.event_name }}</b> {{ e.current_price|money if e.current_price else 'Free' }}{% if e.is_team %} (team {{ e.team_min }}–{{ e.team_max }}){% endif %}
+        <span class="small muted">{{ e.event_date|date }} {{ e.start_time|time }} · {{ e.seats_left }} seats left{% if done %} · already registered{% endif %}</span></label>
+      {% if e.is_team and not done %}
+      <div class="form-grid mt-1">
+        <input type="text" name="team_{{ e.event_id }}" placeholder="Team name" maxlength="60" aria-label="Team name for {{ e.event_name }}">
+        <input type="text" name="members_{{ e.event_id }}" placeholder="Other members, separated by commas" aria-label="Team members for {{ e.event_name }}">
+      </div>
+      {% endif %}
+    </div>
+  {% else %}<p class="muted">No events are open for registration.</p>{% endfor %}
+  </div>
+  <h3 class="mb-0">3. Payment received</h3>
+  <div class="radio-cards">
+    <label class="radio-card"><input type="radio" name="method" value="CASH" checked><span><b>Cash</b>Collected by you now.</span></label>
+    <label class="radio-card"><input type="radio" name="method" value="UPI_QR"><span><b>UPI to the college account</b>You saw the payment succeed on the payer's phone.
+      <input type="text" name="utr" placeholder="UPI reference (optional)" maxlength="22" class="mono mt-1"></span></label>
+  </div>
+  <div class="field"><label for="coupon">Coupon <span class="hint">(optional)</span></label><input type="text" id="coupon" name="coupon" maxlength="30" class="mono"></div>
+  <button class="btn gold" type="submit">Register &amp; confirm</button>
+</form>
+
+<section class="card">
+  <h3>Registrations</h3>
+  {% if regs %}
+  <ul class="list-plain">{% for r in regs %}
+    <li class="row between"><span><b>{{ r.event_name }}</b> {{ status_badge(r.status) }}<br><span class="small muted">{{ r.fee_amount|money if r.fee_amount else 'Free' }} · {{ r.payment_method or '—' }} · {{ r.ticket_code }}</span></span>
+      <span class="btn-row"><a class="btn sm ghost" href="{{ url_for('staff.desk_receipt', reg_id=r.reg_id) }}" target="_blank">Receipt</a>
+      <a class="btn sm ghost" href="{{ url_for('staff.registration', reg_id=r.reg_id) }}">Open</a></span></li>
+  {% endfor %}</ul>
+  {% else %}<p class="muted mb-0">No registrations yet.</p>{% endif %}
+</section>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "app_base.html" %}
+{% from "macros.html" import csrf, password %}
+{% block title %}Backups{% endblock %}
+{% block sidenav %}{% include "nav_staff.html" %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Backups</h1><p>Automatic backup every {{ cfg.backup.interval_minutes }} minutes (last {{ cfg.backup.keep }} kept). Download one to a pen drive before the event day.</p></div>
+  <form method="post">{{ csrf() }}<button class="btn gold" name="action" value="create">Back up now</button></form></div>
+<div class="grid grid-2">
+  <section>
+    <div class="table-wrap"><table><thead><tr><th>Backup</th><th class="num">Size</th><th></th></tr></thead>
+    <tbody>{% for b in items %}<tr><td class="small mono">{{ b.name }}<br><span class="muted">{{ b.created|date }}</span></td><td class="num">{{ b.size_kb }} KB</td>
+      <td><a class="btn sm ghost" href="{{ url_for('admin.backup_download', name=b.name) }}">Download</a></td></tr>
+    {% else %}<tr><td colspan="3" class="empty">No backups yet.</td></tr>{% endfor %}</tbody></table></div>
+  </section>
+  <form method="post" enctype="multipart/form-data" class="card form" data-confirm="Restoring REPLACES ALL current data with the backup. A safety backup is taken first. Continue?">
+    {{ csrf() }}<input type="hidden" name="action" value="restore">
+    <h3 class="mb-0">Restore</h3>
+    <p class="small muted mb-0">Choose a backup from the list, or upload a downloaded backup file.</p>
+    <div class="field"><label for="name">Saved backup</label><select id="name" name="name"><option value="">-</option>{% for b in items %}<option>{{ b.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="file">Or upload a backup file (.json.gz)</label><input type="file" id="file" name="file" accept=".gz"></div>
+    {{ password('password', 'Your password (to confirm)') }}
+    <div><button class="btn danger" type="submit">Restore</button></div>
+  </form>
+</div>
+{% endblock %}

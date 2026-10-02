@@ -1,0 +1,20 @@
+{% macro bars(c, suffix='') %}
+<svg class="chart" viewBox="0 0 {{ c.width }} {{ c.height + 4 }}" role="img" aria-label="Bar chart">
+  {% for b in c.bars %}
+    <text class="lbl" x="{{ c.label_w - 8 }}" y="{{ b.y + 19 }}" text-anchor="end">{{ b.label }}</text>
+    {% if b.track %}<rect class="track" x="{{ c.label_w }}" y="{{ b.y + 6 }}" width="{{ b.track }}" height="18" rx="4"></rect>{% endif %}
+    <rect class="bar {{ b.cls }}" x="{{ c.label_w }}" y="{{ b.y + 6 }}" width="{{ b.w }}" height="18" rx="4"></rect>
+    <text x="{{ c.label_w + [b.w, b.track]|max + 6 }}" y="{{ b.y + 19 }}">{{ b.value }}{% if b.cap %}/{{ b.cap }}{% endif %}{{ suffix }}</text>
+  {% endfor %}
+</svg>
+{% endmacro %}
+
+{% macro line(c) %}
+<svg class="chart" viewBox="0 0 {{ c.width }} {{ c.height }}" role="img" aria-label="Registrations per day">
+  <line class="grid" x1="{{ c.left }}" y1="{{ c.base }}" x2="{{ c.width - 10 }}" y2="{{ c.base }}"></line>
+  <text x="4" y="16">{{ c.top }}</text><text x="4" y="{{ c.base }}">0</text>
+  <polygon class="area" points="{{ c.area }}"></polygon>
+  <polyline class="line" points="{{ c.line }}"></polyline>
+  {% for x, y, r in c.points %}{% if loop.index0 % 2 == 0 %}<text x="{{ x }}" y="{{ c.height - 6 }}" text-anchor="middle">{{ r.d.strftime('%d %b') }}</text>{% endif %}{% endfor %}
+</svg>
+{% endmacro %}

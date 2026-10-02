@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Schedule{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><p class="eyebrow">{{ site.symposium_name }}</p><h1 class="mb-0">Schedule</h1></div></div>
+    {% for day, items in days.items() %}
+      <h2 class="day-head">{{ day|date }}</h2>
+      <div class="timeline mb-2">
+        {% for e in items %}
+        <div class="card flat slot">
+          <div><b>{{ e.start_time|time }} – {{ e.end_time|time }}</b><br><span class="small muted">{{ e.venue_name or 'Online' }}</span></div>
+          <div><a href="{{ url_for('public.event_detail', event_id=e.event_id) }}"><b>{{ e.event_name }}</b></a>
+            <span class="badge">{{ e.category_name }}</span>
+            {% if e.recently_changed %}<span class="badge pill-changed">Updated</span>{% endif %}
+            {% if e.status != 'OPEN' %}<span class="badge {{ e.status }}">{{ e.status.title() }}</span>{% endif %}</div>
+          <div class="small muted nowrap">{{ e.seats_left if e.seats_left > 0 else 0 }} seats left</div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card empty">The schedule will be published soon.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

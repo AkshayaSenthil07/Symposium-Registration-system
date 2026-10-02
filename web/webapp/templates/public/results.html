@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "macros.html" import medal %}
+{% block title %}Results{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><p class="eyebrow">{{ site.symposium_name }}</p><h1 class="mb-0">Results &amp; leaderboard</h1></div></div>
+    <div class="grid grid-2">
+      <div>
+        <h2>Event winners</h2>
+        {% if winners %}
+        <div class="table-wrap"><table>
+          <thead><tr><th>Event</th><th>Place</th><th>Winner</th><th>College</th></tr></thead>
+          <tbody>{% for w in winners %}<tr><td>{{ w.event_name }}</td><td>{{ medal(w.position) }}</td><td>{{ w.team_name or w.full_name }}{% if w.team_name %}<br><span class="small muted">{{ w.full_name }}</span>{% endif %}</td><td>{{ w.college_name or '' }}</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<div class="card empty">Results will appear here after each event.</div>{% endif %}
+      </div>
+      <div>
+        <h2>College championship</h2>
+        <p class="small muted">5 points for 1st, 3 for 2nd, 1 for 3rd.</p>
+        {% if leaderboard %}
+        <div class="table-wrap"><table>
+          <thead><tr><th>#</th><th>College</th><th class="num">Gold</th><th class="num">Silver</th><th class="num">Bronze</th><th class="num">Points</th></tr></thead>
+          <tbody>{% for c in leaderboard %}<tr><td>{{ loop.index }}</td><td>{{ c.college_name }}</td><td class="num">{{ c.gold }}</td><td class="num">{{ c.silver }}</td><td class="num">{{ c.bronze }}</td><td class="num"><b>{{ c.points }}</b></td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<div class="card empty">No results yet.</div>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

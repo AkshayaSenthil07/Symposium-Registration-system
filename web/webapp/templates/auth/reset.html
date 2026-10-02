@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, password %}
+{% block title %}Choose a new password{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="card auth-card">
+    <h1>Choose a new password</h1>
+    <form method="post" class="form">
+      {{ csrf() }}
+      {{ password('password', 'New password', autocomplete='new-password', strength=true, hint='At least 8 characters with upper-case, lower-case and a number.') }}
+      {{ password('confirm', 'Confirm new password', autocomplete='new-password') }}
+      <button class="btn block" type="submit">Save password</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
